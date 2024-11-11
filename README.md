@@ -1,4 +1,4 @@
-# 2024 Lunabotics Competition - RAER Software Repo
+# 2025 Lunabotics Competition - RAER Software Repo
 
 This repo houses the ROS2 - Humble workspace for our submission in the 2024 NASA RMC (Regolith Mining Competition)
 
