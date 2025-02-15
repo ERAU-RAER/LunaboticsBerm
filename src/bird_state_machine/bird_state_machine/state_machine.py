@@ -29,7 +29,6 @@ class StateMachine(Node):
                 return state
         return None
 
-
 class State(ABC):
     
     @abstractmethod
@@ -50,6 +49,7 @@ def main(args = None):
     rclpy.init(args=args)
 
     state_machine = StateMachine()
+    rclpy.spin(state_machine)
 
     rclpy.shutdown()
 
