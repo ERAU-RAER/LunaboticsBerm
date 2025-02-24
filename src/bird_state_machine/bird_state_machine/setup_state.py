@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from bird_state_machine.state_machine import StateMachine
-from bird_state_machine.state_machine import State
+from bird_state_machine.state import State
 
 
 class SetupState(State):
