@@ -9,10 +9,9 @@ class StandbyState(State):
     def __init__(self, state_machine: StateMachine):
         super().__init__(state_machine,'standby_state')
 
-    def enter(self):
-        super().enter()
-        self.state_machine.change_state(self,'setup_state')
+    def enter(self, error_code: int):
+        super().enter(error_code)
 
-    def exit(self):
-        super().exit()
+    def exit(self, error_code: int):
+        super().exit(error_code)
         pass

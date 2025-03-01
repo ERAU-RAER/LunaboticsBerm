@@ -9,9 +9,9 @@ class State(ABC):
         self.state_name = state_name
 
     @abstractmethod 
-    def enter(self):
+    def enter(self, error_code: int):
         self.state_machine.get_logger().info('State Machine: Entering %s' % self.state_name)
         
     @abstractmethod 
-    def exit(self):
-        self.state_machine.get_logger().info('State Machine: Exiting %s' % self.state_name)   
+    def exit(self, error_code: int):
+        self.state_machine.get_logger().info('State Machine: Exiting %s' % self.state_name)  

@@ -7,12 +7,12 @@ from bird_state_machine.state import State
 class SetupState(State):
     
     def __init__(self, state_machine: StateMachine):
-        super().__init__(state_machine,'setup_state')      
+        super().__init__(state_machine,'setup_state')
 
-    def enter(self):
-        super().enter()
+    def enter(self, error_code: int):
+        super().enter(error_code)
         pass
 
-    def exit(self):
-        super().exit()
+    def exit(self, error_code: int):
+        super().exit(error_code)
         pass
