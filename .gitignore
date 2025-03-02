@@ -4,4 +4,5 @@
 /log
 /src/arduino_serial_package/arduino_files/arduino_serial_bridge/.pio
 /src/arduino_serial_package/arduino_files/arduino_serial_bridge/.vscode
+/src/arduino_serial_package/.vscode
 /teleop.code-workspace
