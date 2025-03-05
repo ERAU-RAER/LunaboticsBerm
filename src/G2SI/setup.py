@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'g2si_node = G2SI.g2si_node:main',
         ],
     },
 )
