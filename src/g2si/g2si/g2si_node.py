@@ -3,7 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3
 
-class G2SINode(Node):
+class g2siNode(Node):
     def __init__(self):
         super().__init__('g2si_node')
 
@@ -56,7 +56,7 @@ class G2SINode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = G2SINode()
+    node = g2siNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'G2SI'
+package_name = 'g2si'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'g2si_node = G2SI.g2si_node:main',
+            'g2si_node = g2si.g2si_node:main',
         ],
     },
 )
