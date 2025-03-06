@@ -20,7 +20,7 @@ class g2siNode(Node):
     def listener_callback(self, msg):
         if not self.data_received:
             self.data_received = True
-            self.get_logger().info('Found you! Received first IMU sample')
+            self.get_logger().info('Found you! Received first IMU sample.')
 
         # Convert linear acceleration from g's to m/s^2
         converted_acceleration = self.convert_g_to_ms2(msg.linear_acceleration)
@@ -51,7 +51,7 @@ class g2siNode(Node):
 
     def check_data_received(self):
         if not self.data_received:
-            self.get_logger().warn('Hello? Is anyone out there? Still waiting on first IMU sample.')
+            self.get_logger().warn('Hello? Is anyone out there? Still waiting on first IMU sample...')
 
 def main(args=None):
     rclpy.init(args=args)
