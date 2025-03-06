@@ -40,3 +40,6 @@ BIRD is built on ROS2 (Humble) and Ubuntu 22.04 (Jammy Jellyfish). It is compris
 8. [3D SLAM](https://github.com/hku-mars/FAST_LIO/tree/ROS2)
 9. [Nav2](https://docs.nav2.org/)
 10. Custom State Machine and Fault Detection System
+
+## 🔧 Setup Guide
+*WIP*
