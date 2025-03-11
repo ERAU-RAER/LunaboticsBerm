@@ -14,7 +14,8 @@ frame_id      = 'livox_frame'
 lvx_file_path = '/home/livox/livox_test.lvx'
 cmdline_bd_code = 'livox0000000001'
 
-cur_config_path = os.path.join(get_package_share_directory('bird_bringup'), 'config')
+cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
+cur_config_path = cur_path + '../config'
 user_config_path = os.path.join(cur_config_path, 'MID360_config.json')
 ################### user configure parameters for ros2 end #####################
 
