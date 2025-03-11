@@ -17,7 +17,7 @@ def generate_launch_description():
     )
 
     g2si_node = Node(
-        package='g2si_package',
+        package='g2si',
         executable='g2si_node',
         name='g2si_node',
         output='screen',
