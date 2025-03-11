@@ -7,7 +7,7 @@
   <link name="base_chassis">
     <inertial>
       <origin
-        xyz="0.126241 0.195427 -0.107248"
+        xyz="0 0 0"
         rpy="0 0 0" />
       <mass
         value="1" />
@@ -21,11 +21,12 @@
     </inertial>
     <visual>
       <origin
-        xyz="0.126241 0.195427 -0.107248"
-        rpy="1.5708 0 0" />
+        xyz="0 0 0"
+        rpy="0 0 0" />
+        <!--1.5708-->
       <geometry>
         <mesh
-          filename="package://bird_description/meshes/simplify_base_link.stl" />
+          filename="package://bird_description/meshes/fixed_origin_bird.stl" />
       </geometry>
       <material
         name="">
@@ -35,11 +36,11 @@
     </visual>
     <collision>
       <origin
-        xyz="0.126241 0.195427 -0.107248"
-        rpy="1.5708 0 0" />
+        xyz="0 0 0"
+        rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://bird_description/meshes/simplify_base_link.stl" />
+          filename="package://bird_description/meshes/fixed_origin_bird.stl" />
       </geometry>
     </collision>
   </link>
@@ -56,7 +57,9 @@
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/> 
+    <origin xyz="0 0 0.171" rpy="0 0 0"/> 
   </joint>
+
+
 
 </robot>
