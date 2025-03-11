@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<robot name="bird">
+
+  <!-- Base -->
+  <link name="base_link"/>
+
+  <link name="base_chassis">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="1" />
+      <inertia
+        ixx="0.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0"
+        izz="0.0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 1.5708" />
+        <!--1.5708-->
+      <geometry>
+        <mesh
+          filename="package://bird_description/meshes/fixed_origin_bird.stl" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 1.5708" />
+      <geometry>
+        <mesh
+          filename="package://bird_description/meshes/fixed_origin_bird.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_chassis_to_base_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_chassis"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_footprint"/>
+  
+  <!-- Base to footprint joint -->
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.171" rpy="0 0 0"/> 
+  </joint>
+
+  <link name="livox_frame" />
+
+  <joint name="livox2base_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="livox_frame"/>
+    <origin xyz="-0.126055 0 0.339187" rpy="0 0 0"/>
+  </joint>
+
+</robot>
