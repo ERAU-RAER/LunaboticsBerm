@@ -12,7 +12,7 @@ rviz_config_path = os.path.join(cur_config_path, 'display_point_cloud_ROS2.rviz'
 def generate_launch_description():
     agent_lidar_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('agent_lidar_package'), 'launch', 'agent_lidar_launch.py')
+            os.path.join(get_package_share_directory('bird_bringup'), 'launch', 'agent_lidar_launch.py')
         )
     )
 
