@@ -1,8 +1,10 @@
-# Packages
+### Useful Commands:
+Build packages without Livox which requires special buildscript:
+```
+colcon build --packages-ignore livox_ros_driver2
 
-Packages to make:
-1. - [x] Lunabotics Twist Transmitter
-2. - [ ] Lidar
-3. - [ ] Nav2
-
-I just realized that the launch file has been in the incorrect location. This fixes that. Looks like it's time to update the READMEs! Again...
+```
+Build everything including Livox (*From inside ros ws directory*):
+```
+./src/livox_ros_driver2/build.sh humble
+```
