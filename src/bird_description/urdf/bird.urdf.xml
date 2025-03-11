@@ -2,9 +2,9 @@
 <robot name="bird">
 
   <!-- Base -->
-  <link name="base_footprint"/>
+  <link name="base_link"/>
 
-  <link name="base_link">
+  <link name="base_chassis">
     <inertial>
       <origin
         xyz="0.126241 0.195427 -0.107248"
@@ -44,6 +44,14 @@
     </collision>
   </link>
 
+  <joint name="base_chassis_to_base_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_chassis"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_footprint"/>
+  
   <!-- Base to footprint joint -->
   <joint name="base_joint" type="fixed">
     <parent link="base_footprint"/>
