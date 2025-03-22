@@ -30,8 +30,26 @@ def generate_launch_description():
         )
     )
     
+    madgwick_lidar = Node(
+        package='imu_filter_madgwick',
+        executable='imu_filter_madgwick_node',
+        name='madgwick_lidar_node',
+        output='screen',
+        parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'madgwick_lidar.yaml')]
+    )
+
+    robot_local_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'ekf.yaml')]
+    )
+
     return LaunchDescription([
         agent_lidar_launch,
         g2si_node,
+        madgwick_lidar,
+        robot_local_node,
         foxglove_launch
     ])
