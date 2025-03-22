@@ -3,7 +3,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import PythonLaunchDescriptionSource, AnyLaunchDescriptionSource
 
 cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
 cur_config_path = cur_path + '../config'
@@ -24,7 +24,14 @@ def generate_launch_description():
         remappings=[('/imu/data_raw','/livox/imu')]
     )
 
+    foxglove_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('foxglove_bridge'),'launch','foxglove_bridge_launch.xml')
+        )
+    )
+    
     return LaunchDescription([
         agent_lidar_launch,
-        g2si_node
+        g2si_node,
+        foxglove_launch
     ])
