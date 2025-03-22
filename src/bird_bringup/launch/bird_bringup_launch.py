@@ -21,7 +21,10 @@ def generate_launch_description():
         executable='g2si_node',
         name='g2si_node',
         output='screen',
-        remappings=[('/imu/data_raw','/livox/imu')]
+        remappings=[
+            ('/imu/data_raw', '/livox/imu'),
+            ('/imu/data', '/imu/data_raw_livox')
+        ]
     )
 
     foxglove_launch = IncludeLaunchDescription(
@@ -35,6 +38,10 @@ def generate_launch_description():
         executable='imu_filter_madgwick_node',
         name='madgwick_lidar_node',
         output='screen',
+        remappings=[
+            ('/imu/data_raw', '/imu/data_raw_livox'),
+            ('/imu/data', '/imu/data_livox')
+        ],
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'madgwick_lidar.yaml')]
     )
 
