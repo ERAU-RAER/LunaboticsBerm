@@ -33,6 +33,18 @@ def generate_launch_description():
         )
     )
     
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{'robot_description': open(os.path.join(get_package_share_directory('bird_description'),'urdf', 'bird.urdf.xml')).read()}]
+    )
+
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        name='joint_state_publisher',
+        output='screen'
+    )
     madgwick_lidar = Node(
         package='imu_filter_madgwick',
         executable='imu_filter_madgwick_node',
@@ -55,6 +67,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         agent_lidar_launch,
+        robot_state_publisher_node,
+        joint_state_publisher_node,
         g2si_node,
         madgwick_lidar,
         robot_local_node,
