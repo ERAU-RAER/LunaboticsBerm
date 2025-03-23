@@ -65,7 +65,7 @@
   <joint name="livox2base_link" type="fixed">
     <parent link="base_link"/>
     <child link="livox_frame"/>
-    <origin xyz="-0.126055 0 0.339187" rpy="3.1416 0 1.5708"/>
+    <origin xyz="-0.126055 0 0.339187" rpy="3.1416 0 -1.5708"/>
   </joint>
 
 </robot>
