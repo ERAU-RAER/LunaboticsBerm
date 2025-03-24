@@ -1,7 +1,7 @@
 ekf_filter_node:
   ros__parameters:
     two_d_mode: true
-    publish_tf: true
+    publish_tf: false
 
     map_frame: "map"
     odom_frame: "odom"
