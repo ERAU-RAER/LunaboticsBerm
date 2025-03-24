@@ -2,7 +2,6 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3
-import json
 import threading
 
 class g2siNode(Node):
@@ -10,14 +9,14 @@ class g2siNode(Node):
         super().__init__('g2si_node')
 
         # Publisher to send corrected IMU data
-        self.publisher_ = self.create_publisher(Imu, '/imu/data', 10) 
+        self.publisher_ = self.create_publisher(Imu, '/imu/data', 10)
         
         # Subscriber to receive raw IMU data
         self.subscription = self.create_subscription(Imu, '/imu/data_raw', self.listener_callback, 10)
-        self.subscription  # Prevent unused variable warning
+        self.subscription
 
         # State variables
-        self.data_received = False  # Tracks whether the first data sample has been received
+        self.data_received = False
         self.calibration_data = []  # Stores raw IMU data for calibration
 
         # Offsets for calibration (initialized to zero)
@@ -45,15 +44,14 @@ class g2siNode(Node):
 
         # During calibration, store raw IMU data for processing
         if not self.calibration_event.is_set():
-            raw_data = json.dumps({
-                'ax': msg.linear_acceleration.x,
-                'ay': msg.linear_acceleration.y,
-                'az': msg.linear_acceleration.z,
-                'gx': msg.angular_velocity.x,
-                'gy': msg.angular_velocity.y,
-                'gz': msg.angular_velocity.z
-            })
-            self.calibration_data.append(raw_data)
+            self.calibration_data.append((
+                msg.linear_acceleration.x,
+                msg.linear_acceleration.y,
+                msg.linear_acceleration.z,
+                msg.angular_velocity.x,
+                msg.angular_velocity.y,
+                msg.angular_velocity.z
+            ))
 
         # Convert linear acceleration to m/s² using calibration offsets
         converted_acceleration = self.convert_g_to_ms2(msg.linear_acceleration)
@@ -91,34 +89,31 @@ class g2siNode(Node):
         """
         self.get_logger().info("Starting IMU calibration... Keep sensor flat and steady! This is gonna take a hot second...")
 
-        ax = ay = az = gx = gy = gz = 0.0
-
-        # Collect enough data samples for calibration
+        # Wait until enough samples are collected
         while len(self.calibration_data) < num_samples:
             rclpy.spin_once(self, timeout_sec=0.1)
+
+        # Initialize accumulators
+        ax = ay = az = gx = gy = gz = 0.0
 
         # Process collected data to calculate offsets
         for i in range(num_samples):
             try:
-                data = self.calibration_data[i]
-                json_data = json.loads(data)
-
-                # Sum up raw IMU values for averaging
-                ax += float(json_data.get('ax', 0.0))
-                ay += float(json_data.get('ay', 0.0))
-                az += float(json_data.get('az', 0.0))
-                gx += float(json_data.get('gx', 0.0))
-                gy += float(json_data.get('gy', 0.0))
-                gz += float(json_data.get('gz', 0.0))
+                ax += self.calibration_data[i][0]
+                ay += self.calibration_data[i][1]
+                az += self.calibration_data[i][2]
+                gx += self.calibration_data[i][3]
+                gy += self.calibration_data[i][4]
+                gz += self.calibration_data[i][5]
 
             except Exception as e:
-                self.get_logger().warning(f"Error during calibration data collection: {e}")
+                self.get_logger().warning(f"Error during calibration data processing: {e}")
                 continue
 
         # Calculate average offsets
         accel_offset_x = ax / num_samples
         accel_offset_y = ay / num_samples
-        accel_offset_z = (az / num_samples) - 8192  # Adjust for Earth's gravity (~1g)
+        accel_offset_z = (az / num_samples)
 
         gyro_offset_x = gx / num_samples
         gyro_offset_y = gy / num_samples
