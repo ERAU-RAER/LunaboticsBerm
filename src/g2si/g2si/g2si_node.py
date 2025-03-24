@@ -113,7 +113,7 @@ class g2siNode(Node):
         # Calculate average offsets
         accel_offset_x = ax / num_samples
         accel_offset_y = ay / num_samples
-        accel_offset_z = (az / num_samples)
+        accel_offset_z = (az / num_samples) - 1.0 
 
         gyro_offset_x = gx / num_samples
         gyro_offset_y = gy / num_samples
