@@ -26,7 +26,7 @@ def generate_launch_description():
                 #{'frame_out': 'os1_sensor'},
                 {'mapi_topic_name': 'intensity_grid'},
                 {'maph_topic_name': 'height_grid'},
-                {'topic':"/livox/lidar"},
+                {'cloud_in_topic':'/livox/lidar'},
             ]
         )
 
