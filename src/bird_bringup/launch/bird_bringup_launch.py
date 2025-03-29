@@ -16,6 +16,12 @@ def generate_launch_description():
         )
     )
 
+    occupancy_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('bird_bringup'), 'launch', 'occupancy.launch.py')
+        )
+    )
+
     g2si_node = Node(
         package='g2si',
         executable='g2si_node',
