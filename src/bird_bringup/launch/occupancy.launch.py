@@ -9,7 +9,7 @@ import os
 def generate_launch_description():
 
     return LaunchDescription([
-        DeclareLaunchArgument("topic", description="a pointcloud topic to process", default_value="nonground"),
+        DeclareLaunchArgument("topic", description="a pointcloud topic to process", default_value="/livox/lidar"),
         Node(
             package='pointcloud_to_grid',
             executable='pointcloud_to_grid_node',
@@ -20,7 +20,7 @@ def generate_launch_description():
                 {'position_y': 0.0},
                 {'verbose1': False},
                 {'verbose2': False},
-                {'cell_size': 0.1},
+                {'cell_size': 0.05},
                 {'length_x': 40.0},
                 {'length_y': 60.0},
                 #{'frame_out': 'os1_sensor'},
