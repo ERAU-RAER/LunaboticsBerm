@@ -48,7 +48,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 10
-      Reference Frame: <Fixed Frame>
+      Reference Frame: livox_frame
       Value: true
     - Class: rviz_default_plugins/Image
       Enabled: true
