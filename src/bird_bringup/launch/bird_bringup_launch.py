@@ -73,6 +73,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         agent_lidar_launch,
+        occupancy_launch,
         robot_state_publisher_node,
         joint_state_publisher_node,
         g2si_node,
