@@ -1,0 +1,6 @@
+madgwick_lidar_node:
+  ros__parameters:
+    publish_tf: false
+    use_mag: false
+    gain: 0.1
+    zeta: 0.0
