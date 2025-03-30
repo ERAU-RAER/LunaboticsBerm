@@ -31,7 +31,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "Converting IMU linear acceleration from g's to m/s²");
     }
 
-    void hlCalibrateIMU(size_t num_samples = 1000)
+    void hlCalibrateIMU(size_t num_samples = 500)
     {
         // Check if calibration is enabled via the use_cal parameter
         bool use_cal;
@@ -49,7 +49,7 @@ public:
         // Wait until enough samples are collected
         {
             std::unique_lock<std::mutex> lock(calibration_mutex_);
-            if (!calibration_cv_.wait_for(lock, 30s, [this, num_samples]() {
+            if (!calibration_cv_.wait_for(lock, 120s, [this, num_samples]() {
                     return calibration_data_.size() >= num_samples;
                 }))
             {
@@ -73,11 +73,13 @@ public:
         }
 
         // Calculate average offsets
+        size_t actual_samples = calibration_data_.size();
         accel_offsets_ = {
-            ax / num_samples,
-            ay / num_samples,
-            (az / num_samples) - 1.0 // Subtract 1g for gravity
+            ax / actual_samples,
+            ay / actual_samples,
+            (az / actual_samples) - 1.0
         };
+
 
         gyro_offsets_ = {
             gx / num_samples,
@@ -175,7 +177,7 @@ int main(int argc, char *argv[])
     auto node = std::make_shared<G2siNode>();
 
     // Optional: Perform calibration at startup
-    node->hlCalibrateIMU();
+    // node->hlCalibrateIMU();
 
     rclcpp::spin(node);
     rclcpp::shutdown();
