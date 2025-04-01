@@ -12,6 +12,8 @@
 
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
+  <depend>pcl_ros</depend>
+  
 
 
   <depend>rclpy</depend>
