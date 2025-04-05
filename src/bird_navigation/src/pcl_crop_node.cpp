@@ -54,8 +54,8 @@ private:
 
         // Apply a crop box filter
         CropBox<PointXYZ> crop_box_filter;
-        crop_box_filter.setMin(Eigen::Vector4f(0.0, 0.0, -1.0, 1.0)); // Define the min bounds
-        crop_box_filter.setMax(Eigen::Vector4f(0.75, 1.27, 1.0, 1.0));   // Define the max bounds
+        crop_box_filter.setMin(Eigen::Vector4f(-0.75/2, -1.27/2, -1.0, 1.0)); // Define the min bounds
+        crop_box_filter.setMax(Eigen::Vector4f(0.75/2, 1.27/2, 1.0, 1.0));   // Define the max bounds
         crop_box_filter.setInputCloud(cloud);
 
         PointCloud<PointXYZ>::Ptr cropped_cloud(new PointCloud<PointXYZ>());
