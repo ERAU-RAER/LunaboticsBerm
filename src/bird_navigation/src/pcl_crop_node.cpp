@@ -54,34 +54,34 @@ private:
 
         // Apply a crop box filter
         CropBox<PointXYZ> crop_box_filter;
-        crop_box_filter.setMin(Eigen::Vector4f(-0.75/2, -0.94, -1.0, 1.0)); // Define the min bounds
-        crop_box_filter.setMax(Eigen::Vector4f(0.75/2, 0.5, 1.0, 1.0));   // Define the max bounds
+        crop_box_filter.setMin(Eigen::Vector4f(-0.75 / 2, -0.94, -1.0, 1.0)); // Define the min bounds
+        crop_box_filter.setMax(Eigen::Vector4f(0.75 / 2, 0.5, 1.0, 1.0));   // Define the max bounds
         crop_box_filter.setInputCloud(cloud);
 
         PointCloud<PointXYZ>::Ptr cropped_cloud(new PointCloud<PointXYZ>());
         crop_box_filter.filter(*cropped_cloud);
-        // subtraction of cloud
+
+        // Subtraction of cloud
         pcl::PointCloud<pcl::PointXYZ> result_cloud;
-        for (const auto& point1 : cloud) {
+        for (const auto& point1 : cloud->points) {  // Use cloud->points to access the points
             bool found = false;
-            // Check if the point is in cloud2 (simple check, can be more efficient)
-            for (const auto& point2 : cropped_cloud) {
+            // Check if the point is in cropped_cloud
+            for (const auto& point2 : cropped_cloud->points) {  // Use cropped_cloud->points to access points
                 if (point1.x == point2.x && point1.y == point2.y && point1.z == point2.z) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                result_cloud.push_back(point1); // Add point to result if not found in cloud2
+                result_cloud.push_back(point1); // Add point to result if not found in cropped_cloud
             }
         }
 
-
         // Convert PCL PointCloud back to ROS PointCloud2 message
-        PointCloud2 output_msg
+        sensor_msgs::msg::PointCloud2 output_msg;  // Missing semicolon added
 
-        toROSMsg(*result_cloud, output_msg);
-        output_msg.header = msg->header; // Preserve the original header
+        toROSMsg(result_cloud, output_msg);
+        output_msg.header = msg->header;  // Preserve the original header
 
         // Publish the cropped point cloud
         cropped_publisher_->publish(output_msg);
