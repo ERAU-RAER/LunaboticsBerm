@@ -64,6 +64,7 @@ private:
         // Convert PCL PointCloud back to ROS PointCloud2 message
         PointCloud2 output_msg;
         PointCloud2 neg_cloud;
+        PointCloud2 full_cloud;
         toROSMsg(*cloud, full_cloud);
         toROSMsg(*cropped_cloud, neg_cloud);
         output_msg = full_cloud-neg_cloud;
