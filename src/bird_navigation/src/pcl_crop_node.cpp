@@ -63,7 +63,7 @@ private:
 
         // Convert PCL PointCloud back to ROS PointCloud2 message
         PointCloud2 output_msg;
-        toROSMsg(*cropped_cloud, output_msg);
+        toROSMsg(cloud-*cropped_cloud, output_msg);
         output_msg.header = msg->header; // Preserve the original header
 
         // Publish the cropped point cloud
