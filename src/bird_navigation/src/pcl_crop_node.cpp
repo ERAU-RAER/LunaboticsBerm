@@ -60,14 +60,25 @@ private:
 
         PointCloud<PointXYZ>::Ptr cropped_cloud(new PointCloud<PointXYZ>());
         crop_box_filter.filter(*cropped_cloud);
+        // subtraction of cloud
+        for (const auto& point1 : cloud) {
+            bool found = false;
+            // Check if the point is in cloud2 (simple check, can be more efficient)
+            for (const auto& point2 : cropped_cloud) {
+                if (point1.x == point2.x && point1.y == point2.y && point1.z == point2.z) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                result_cloud.push_back(point1); // Add point to result if not found in cloud2
+            }
+        }
+
 
         // Convert PCL PointCloud back to ROS PointCloud2 message
-        PointCloud2 output_msg;
-        PointCloud2 neg_cloud;
-        PointCloud2 full_cloud;
-        toROSMsg(*cloud, full_cloud);
-        toROSMsg(*cropped_cloud, neg_cloud);
-        output_msg = full_cloud-neg_cloud;
+        PointCloud2 output_msg
+        toROSMsg(*result_cloud, output_msg);
         output_msg.header = msg->header; // Preserve the original header
 
         // Publish the cropped point cloud
