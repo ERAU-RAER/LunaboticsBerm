@@ -10,6 +10,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument("topic", description="a pointcloud topic to process", default_value="/cropped_cloud"),
+        DeclareLaunchArgument("output_topic", description="a topic to publish the heightmap to", default_value="/height_grid"),
         Node(
             package='pointcloud_to_grid',
             executable='pointcloud_to_grid_node',
@@ -23,9 +24,9 @@ def generate_launch_description():
                 {'cell_size': 0.05},
                 {'length_x': 10.0},
                 {'length_y': 10.0},
-                {'frame_out': 'occupancy_map'},
+                {'frame_out': 'map'},
                 {'mapi_topic_name': 'intensity_grid'},
-                {'maph_topic_name': 'height_grid'},
+                {'maph_topic_name': LaunchConfiguration("output_topic")},
             ]
         )
 
