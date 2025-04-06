@@ -41,6 +41,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/g2si_node.py
   DESTINATION lib/${PROJECT_NAME}
+  RENAME g2si_node
 )
 
 if(BUILD_TESTING)
