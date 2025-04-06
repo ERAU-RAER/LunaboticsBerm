@@ -85,7 +85,7 @@ private:
     
         // Publish the cropped point cloud
         cropped_publisher_->publish(output_msg);
-        RCLCPP_INFO(get_logger(), "*CROPPING!*");
+        // RCLCPP_INFO(get_logger(), "*CROPPING!*");
     }
 
     Publisher<PointCloud2>::SharedPtr cropped_publisher_;
