@@ -20,7 +20,7 @@ def generate_launch_description():
                 {'position_y': 0.0},
                 {'verbose1': False},
                 {'verbose2': False},
-                {'cell_size': 0.1},
+                {'cell_size': 0.05},
                 {'length_x': 10.0},
                 {'length_y': 10.0},
                 {'frame_out': 'occupancy_map'},
