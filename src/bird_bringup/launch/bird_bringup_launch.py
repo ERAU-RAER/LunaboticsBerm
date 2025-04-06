@@ -31,7 +31,7 @@ def generate_launch_description():
     )
 
     g2si_node = Node(
-        package='g2si',
+        package='bird_navigation',
         executable='g2si_node',
         name='g2si_node',
         output='screen',
@@ -41,24 +41,6 @@ def generate_launch_description():
         ]
     )
 
-    foxglove_launch = IncludeLaunchDescription(
-        AnyLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('foxglove_bridge'),'launch','foxglove_bridge_launch.xml')
-        )
-    )
-    
-    robot_state_publisher_node = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        parameters=[{'robot_description': open(os.path.join(get_package_share_directory('bird_description'),'urdf', 'bird.urdf.xml')).read()}]
-    )
-
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        output='screen'
-    )
     madgwick_lidar = Node(
         package='imu_filter_madgwick',
         executable='imu_filter_madgwick_node',
@@ -78,15 +60,34 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'ekf.yaml')]
     )
+    
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{'robot_description': open(os.path.join(get_package_share_directory('bird_description'),'urdf', 'bird.urdf.xml')).read()}]
+    )
+
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        output='screen'
+    )
+
+    foxglove_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('foxglove_bridge'),'launch','foxglove_bridge_launch.xml')
+        )
+    )
 
     return LaunchDescription([
         agent_lidar_launch,
         pcl_crop_node,
         occupancy_launch,
-        robot_state_publisher_node,
-        joint_state_publisher_node,
         g2si_node,
         madgwick_lidar,
         robot_local_node,
+        robot_state_publisher_node,
+        joint_state_publisher_node,
         foxglove_launch
     ])
