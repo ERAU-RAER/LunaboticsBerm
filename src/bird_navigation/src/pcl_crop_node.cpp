@@ -30,7 +30,7 @@ using sensor_msgs::msg::PointCloud2;
 
 class CropNode : public Node {
 public:
-    CropNode() : Node("simple_node") {
+    CropNode() : Node("crop_node") {
         // Create a subscription for input point clouds
         point_cloud_subscription_ = create_subscription<PointCloud2>(
             "input_cloud", 10,
