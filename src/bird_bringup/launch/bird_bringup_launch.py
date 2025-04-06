@@ -16,6 +16,14 @@ def generate_launch_description():
         )
     )
 
+    pcl_crop_node = Node(
+        package='bird_navigation',
+        executable='pcl_crop_node',
+        name='pcl_crop_node',
+        output='screen',
+        remappings=[("/input_cloud","/livox/lidar")]
+    )
+
     occupancy_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('bird_bringup'), 'launch', 'occupancy.launch.py')
@@ -73,6 +81,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         agent_lidar_launch,
+        pcl_crop_node,
         occupancy_launch,
         robot_state_publisher_node,
         joint_state_publisher_node,
