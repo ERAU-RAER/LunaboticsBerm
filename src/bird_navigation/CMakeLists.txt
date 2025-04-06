@@ -12,6 +12,11 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(pcl_ros REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 
 
 # uncomment the following section in order to fill in
@@ -26,11 +31,14 @@ add_executable(g2si_cpp_node src/g2si_node.cpp)
 ament_target_dependencies(g2si_cpp_node rclcpp sensor_msgs)
 add_executable(pcl_crop_node src/pcl_crop_node.cpp)
 ament_target_dependencies(pcl_crop_node rclcpp sensor_msgs pcl_ros)
+add_executable(mercator_node src/mercator_node.cpp)
+ament_target_dependencies(mercator_node rclcpp nav_msgs geometry_msgs tf2_ros tf2_geometry_msgs tf2)
 
 # Install Cpp executables
 install(TARGETS
   g2si_cpp_node
   pcl_crop_node
+  mercator_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
