@@ -60,6 +60,14 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'ekf.yaml')]
     )
+
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_pub_odom_to_baselink',
+        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_link'],
+        output='screen'
+    )
     
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
@@ -86,7 +94,8 @@ def generate_launch_description():
         occupancy_launch,
         g2si_node,
         madgwick_lidar,
-        robot_local_node,
+        # robot_local_node,
+        static_transform_publisher,
         robot_state_publisher_node,
         joint_state_publisher_node,
         foxglove_launch

@@ -16,24 +16,32 @@ using std::placeholders::_1;
 
 class Mercator : public rclcpp::Node {
 public:
-  Mercator() : Node("mercator"), tf_buffer_(this->get_clock()), tf_listener_(tf_buffer_) {
-    input_topic_ = this->declare_parameter("input_topic", "/local_grid");
-    output_topic_ = this->declare_parameter("output_topic", "/map");
-    base_frame_ = this->declare_parameter("base_frame", "base_link");
-    odom_frame_ = this->declare_parameter("odom_frame", "odom");
-    map_frame_ = this->declare_parameter("map_frame", "map");
+Mercator() : Node("mercator"), tf_buffer_(this->get_clock()), tf_listener_(tf_buffer_) {
+  input_topic_ = this->declare_parameter("input_topic", "/local_grid");
+  output_topic_ = this->declare_parameter("output_topic", "/map");
+  base_frame_ = this->declare_parameter("base_frame", "base_link");
+  odom_frame_ = this->declare_parameter("odom_frame", "odom");
+  map_frame_ = this->declare_parameter("map_frame", "map");
 
-    map_to_odom_.header.frame_id = map_frame_;
-    map_to_odom_.child_frame_id = odom_frame_;
+  // Initialize the transform to identity so it can be published immediately.
+  map_to_odom_.header.frame_id = map_frame_;
+  map_to_odom_.child_frame_id = odom_frame_;
+  map_to_odom_.transform.translation.x = 0.0;
+  map_to_odom_.transform.translation.y = 0.0;
+  map_to_odom_.transform.translation.z = 0.0;
+  map_to_odom_.transform.rotation.x = 0.0;
+  map_to_odom_.transform.rotation.y = 0.0;
+  map_to_odom_.transform.rotation.z = 0.0;
+  map_to_odom_.transform.rotation.w = 1.0;
 
-    map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(output_topic_, 10);
-    grid_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-      input_topic_, 10, std::bind(&Mercator::grid_callback, this, _1));
+  map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(output_topic_, 10);
+  grid_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
+    input_topic_, 10, std::bind(&Mercator::grid_callback, this, _1));
 
-    tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Mercator::publish_map_to_odom, this));
-    RCLCPP_INFO(this->get_logger(),  "'What's the good of Mercator's North Poles and Equators, Tropics, Zones, and Meridian Lines?' So the Bellman would cry: and the crew would reply 'They are merely conventional signs!'\n- Lewis Carroll");
-  }
+  tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
+  timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Mercator::publish_map_to_odom, this));
+  RCLCPP_INFO(this->get_logger(),  "Mercator initialized with initial transform published.");
+}
 
 private:
   // Converts a log odds value to an occupancy probability between 0 and 100
@@ -46,49 +54,47 @@ private:
   }
 
   void grid_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+    // Instead of looking up the transform, use the published transform.
     geometry_msgs::msg::TransformStamped odom_in_map;
-    try {
-        // Look up the transform from odom to map
-        odom_in_map = tf_buffer_.lookupTransform(map_frame_, odom_frame_, tf2::TimePointZero);
-    } catch (const tf2::TransformException &ex) {
-        RCLCPP_WARN(this->get_logger(), "Transform unavailable: %s", ex.what());
-        return;
+    {
+      std::lock_guard<std::mutex> lock(map_mutex_);
+      odom_in_map = map_to_odom_;
     }
+    // Optionally, if the transform is still identity (or not updated) you can add a check here.
+    // e.g., if (odom_in_map.transform.rotation.w == 0.0) { ... }
 
-    // Convert to tf2::Transform for inversion.
+    // Convert to tf2::Transform if inversion is needed.
     tf2::Transform tf_odom_in_map;
     tf2::fromMsg(odom_in_map.transform, tf_odom_in_map);
-
-    // Invert to get map -> odom
+    // Invert to get map -> odom (if your integration logic expects that)
     tf2::Transform tf_map_to_odom = tf_odom_in_map.inverse();
     tf2::Quaternion q_map_to_odom = tf_map_to_odom.getRotation();
     tf2::Vector3 trans_map_to_odom = tf_map_to_odom.getOrigin();
 
-    // Update the transform to be broadcast.
-    map_to_odom_.header.stamp = this->get_clock()->now();
-    map_to_odom_.header.frame_id = map_frame_;
-    map_to_odom_.child_frame_id = odom_frame_;
-    map_to_odom_.transform.translation.x = trans_map_to_odom.x();
-    map_to_odom_.transform.translation.y = trans_map_to_odom.y();
-    map_to_odom_.transform.translation.z = trans_map_to_odom.z();
-    map_to_odom_.transform.rotation = tf2::toMsg(q_map_to_odom);
+    {
+      std::lock_guard<std::mutex> lock(map_mutex_);
+      // Update map_to_odom_ with the inverted transform (optional, if you want to update it)
+      map_to_odom_.header.stamp = this->get_clock()->now();
+      map_to_odom_.transform.translation.x = trans_map_to_odom.x();
+      map_to_odom_.transform.translation.y = trans_map_to_odom.y();
+      map_to_odom_.transform.translation.z = trans_map_to_odom.z();
+      map_to_odom_.transform.rotation = tf2::toMsg(q_map_to_odom);
 
-    std::lock_guard<std::mutex> lock(map_mutex_);
-    if (!master_map_) {
-        // Initialize master map from the first message.
-        master_map_ = std::make_shared<nav_msgs::msg::OccupancyGrid>(*msg);
-        master_map_->header.frame_id = map_frame_;
-        // Initialize the log-odds vector with 0 (i.e. p=0.5)
-        master_log_odds_.resize(master_map_->data.size(), 0.0);
-    } else {
-        // Since local grid messages are assumed to be in the odom frame,
-        // you can pass the odom_in_map transform (or its inverse, based on your integration logic)
-        integrate_grid(*msg, odom_in_map);
+      if (!master_map_) {
+          // Initialize master map from the first message.
+          master_map_ = std::make_shared<nav_msgs::msg::OccupancyGrid>(*msg);
+          master_map_->header.frame_id = map_frame_;
+          // Initialize the log-odds vector with 0 (i.e. p=0.5)
+          master_log_odds_.resize(master_map_->data.size(), 0.0);
+      } else {
+          // Use the stored transform for integration.
+          integrate_grid(*msg, odom_in_map);
+      }
+
+      master_map_->header.stamp = this->get_clock()->now();
+      map_pub_->publish(*master_map_);
     }
-
-    master_map_->header.stamp = this->get_clock()->now();
-    map_pub_->publish(*master_map_);
-}
+  }
 
   void integrate_grid(const nav_msgs::msg::OccupancyGrid &local_grid, 
                       const geometry_msgs::msg::TransformStamped &transform) {
