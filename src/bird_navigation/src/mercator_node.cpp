@@ -108,25 +108,24 @@ private:
     int global_height = master_map_->info.height;
 
     // Determine the origin in master map coordinates using the provided transform
-    int origin_x = static_cast<int>((transform.transform.translation.x - master_map_->info.origin.position.x) / resolution);
-    int origin_y = static_cast<int>((transform.transform.translation.y - master_map_->info.origin.position.y) / resolution);
+    int origin_x = static_cast<int>((-transform.transform.translation.y - master_map_->info.origin.position.x) / resolution);
+    int origin_y = static_cast<int>((-transform.transform.translation.x - master_map_->info.origin.position.y) / resolution);
 
     for (int y = 0; y < local_height; ++y) {
       for (int x = 0; x < local_width; ++x) {
-        int mx = origin_x + x;
-        int my = origin_y + y;
+        // Apply the same correction (S * [x, y] gives [ -y, -x ]) so that:
+        int mx = origin_x - y;
+        int my = origin_y - x;
         if (mx >= 0 && mx < global_width && my >= 0 && my < global_height) {
           int idx_local = y * local_width + x;
           int idx_global = my * global_width + mx;
           int8_t val = local_grid.data[idx_local]; // -1 unknown, 0-100 valid
           if (val != -1) {
-            // Use 50 as the threshold for occupancy
             if (val >= 50) {
               master_log_odds_[idx_global] += log_odds_occ;
             } else {
               master_log_odds_[idx_global] += log_odds_free;
             }
-            // Convert updated log odds to occupancy probability
             master_map_->data[idx_global] = logOddsToOccupancy(master_log_odds_[idx_global]);
           }
         }
