@@ -59,49 +59,59 @@ private:
     return (p < 0.05 || p > 0.95) ? occ : occ;
   }
 
-  void grid_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
-    // Instead of looking up the transform, use the published transform.
-    geometry_msgs::msg::TransformStamped odom_in_map;
-    {
-      std::lock_guard<std::mutex> lock(map_mutex_);
-      odom_in_map = map_to_odom_;
-    }
-    // Optionally, if the transform is still identity (or not updated) you can
-    // add a check here. e.g., if (odom_in_map.transform.rotation.w == 0.0) {
-    // ... }
-
-    // Convert to tf2::Transform if inversion is needed.
-    tf2::Transform tf_odom_in_map;
-    tf2::fromMsg(odom_in_map.transform, tf_odom_in_map);
-    // Invert to get map -> odom (if your integration logic expects that)
-    tf2::Transform tf_map_to_odom = tf_odom_in_map.inverse();
-    tf2::Quaternion q_map_to_odom = tf_map_to_odom.getRotation();
-    tf2::Vector3 trans_map_to_odom = tf_map_to_odom.getOrigin();
-
-    {
-      std::lock_guard<std::mutex> lock(map_mutex_);
-      // Update map_to_odom_ with the inverted transform (optional, if you want
-      // to update it)
-      map_to_odom_.header.stamp = this->get_clock()->now();
-      map_to_odom_.transform.translation.x = trans_map_to_odom.x();
-      map_to_odom_.transform.translation.y = trans_map_to_odom.y();
-      map_to_odom_.transform.translation.z = trans_map_to_odom.z();
-      map_to_odom_.transform.rotation = tf2::toMsg(q_map_to_odom);
-
-      if (!master_map_) {
-        // Initialize master map from the first message.
-        master_map_ = std::make_shared<nav_msgs::msg::OccupancyGrid>(*msg);
-        master_map_->header.frame_id = map_frame_;
-        // Initialize the log-odds vector with 0 (i.e. p=0.5)
-        master_log_odds_.resize(master_map_->data.size(), 0.0);
-      } else {
-        // Use the stored transform for integration.
-        integrate_grid(*msg, odom_in_map);
+    void grid_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+      // Instead of looking up the transform, use the published transform.
+      geometry_msgs::msg::TransformStamped odom_in_map;
+      {
+        std::lock_guard<std::mutex> lock(map_mutex_);
+        odom_in_map = map_to_odom_;
       }
-
-      master_map_->header.stamp = this->get_clock()->now();
-      map_pub_->publish(*master_map_);
-    }
+      // Optionally, if the transform is still identity (or not updated) you can
+      // add a check here. e.g., if (odom_in_map.transform.rotation.w == 0.0) {
+      // ... }
+  
+      // Convert to tf2::Transform if inversion is needed.
+      tf2::Transform tf_odom_in_map;
+      tf2::fromMsg(odom_in_map.transform, tf_odom_in_map);
+      // Invert to get map -> odom (if your integration logic expects that)
+      tf2::Transform tf_map_to_odom = tf_odom_in_map.inverse();
+      tf2::Quaternion q_map_to_odom = tf_map_to_odom.getRotation();
+      tf2::Vector3 trans_map_to_odom = tf_map_to_odom.getOrigin();
+  
+      {
+        std::lock_guard<std::mutex> lock(map_mutex_);
+        // Update map_to_odom_ with the inverted transform (optional, if you want
+        // to update it)
+        map_to_odom_.header.stamp = this->get_clock()->now();
+        map_to_odom_.transform.translation.x = trans_map_to_odom.x();
+        map_to_odom_.transform.translation.y = trans_map_to_odom.y();
+        map_to_odom_.transform.translation.z = trans_map_to_odom.z();
+        map_to_odom_.transform.rotation = tf2::toMsg(q_map_to_odom);
+  
+        if (!master_map_) {
+          // Initialize master map from the first message.
+          master_map_ = std::make_shared<nav_msgs::msg::OccupancyGrid>(*msg);
+          master_map_->header.frame_id = map_frame_;
+          // Initialize the log-odds vector with 0 (i.e. p=0.5)
+          master_log_odds_.resize(master_map_->data.size(), 0.0);
+        } else {
+          // Use the stored transform for integration.
+          integrate_grid(*msg, odom_in_map);
+        }
+  
+        master_map_->header.stamp = this->get_clock()->now();
+  
+        // Log the master map dimensions and origin
+        RCLCPP_INFO(this->get_logger(), "Map dimensions: width=%d cells, height=%d cells, resolution=%.3f m/cell",
+                    master_map_->info.width,
+                    master_map_->info.height,
+                    master_map_->info.resolution);
+        RCLCPP_INFO(this->get_logger(), "Map origin: (%.3f, %.3f)",
+                    master_map_->info.origin.position.x,
+                    master_map_->info.origin.position.y);
+  
+        map_pub_->publish(*master_map_);
+      }
   }
 
   void integrate_grid(const nav_msgs::msg::OccupancyGrid &local_grid,
