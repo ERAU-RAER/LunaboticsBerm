@@ -10,7 +10,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument("topic", description="a pointcloud topic to process", default_value="/cropped_cloud"),
-        DeclareLaunchArgument("output_topic", description="a topic to publish the heightmap to", default_value="/height_grid"),
+        DeclareLaunchArgument("output_topic", description="a topic to publish the heightmap to", default_value="/map"),
         Node(
             package='pointcloud_to_grid',
             executable='pointcloud_to_grid_node',

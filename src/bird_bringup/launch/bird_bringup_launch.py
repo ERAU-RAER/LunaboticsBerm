@@ -100,7 +100,7 @@ def generate_launch_description():
         agent_lidar_launch,
         pcl_crop_node,
         occupancy_launch,
-        mercator_node,
+        # mercator_node,
         g2si_node,
         madgwick_lidar,
         # robot_local_node,
