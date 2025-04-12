@@ -9,7 +9,7 @@
 
 // Bring specific PCL classes and functions into the global namespace
 using pcl::PointCloud;
-using pcl::PointXYZI;  // Use PointXYZI to carry intensity
+using pcl::PointXYZI;
 using pcl::fromROSMsg;
 using pcl::toROSMsg;
 using pcl::CropBox;
@@ -46,6 +46,9 @@ public:
 
 private:
     void processPointCloud(const PointCloud2::SharedPtr msg) {
+        // Define the Z offset for tuning filter height
+        float z_offset = 0.01;  // Adjust this value as needed
+
         // Convert ROS PointCloud2 message to PCL PointCloud using PointXYZI
         PointCloud<PointXYZI>::Ptr cloud(new PointCloud<PointXYZI>());
         fromROSMsg(*msg, *cloud);
@@ -57,13 +60,13 @@ private:
         PassThrough<pcl::PointXYZI> pass_upper; // Upper Band
         pass_upper.setInputCloud(cloud);
         pass_upper.setFilterFieldName("z");
-        pass_upper.setFilterLimits(0.05, 0.25);
+        pass_upper.setFilterLimits(0.05f + z_offset, 0.25f + z_offset);
         pass_upper.filter(*cloud_filtered_upper);
 
         PassThrough<pcl::PointXYZI> pass_lower; // Lower Band
         pass_lower.setInputCloud(cloud);
         pass_lower.setFilterFieldName("z");
-        pass_lower.setFilterLimits(-0.25, -0.05);
+        pass_lower.setFilterLimits(-0.25f + z_offset, -0.05f + z_offset);
         pass_lower.filter(*cloud_filtered_lower);
 
         // Combine the filtered clouds
@@ -72,20 +75,19 @@ private:
 
         // Use CropBox filter with negative flag to remove points inside the defined box
         CropBox<PointXYZI> crop_box_filter;
-        crop_box_filter.setMin(Eigen::Vector4f(-0.75 / 2, -0.94, -1.0, 1.0)); // Define the min bounds
-        crop_box_filter.setMax(Eigen::Vector4f(0.75 / 2, 0.5, 1.0, 1.0));     // Define the max bounds
+        crop_box_filter.setMin(Eigen::Vector4f(-0.75f / 2, -0.94f, -1.0f, 1.0f));
+        crop_box_filter.setMax(Eigen::Vector4f(0.75f / 2, 0.5f, 1.0f, 1.0f));
         crop_box_filter.setInputCloud(cloud_filtered);
-        crop_box_filter.setNegative(true); // Remove points inside the crop box
+        crop_box_filter.setNegative(true);
         crop_box_filter.filter(*cloud_filtered);
     
         // Convert PCL PointCloud back to ROS PointCloud2 message
         sensor_msgs::msg::PointCloud2 output_msg;
         toROSMsg(*cloud_filtered, output_msg);
-        output_msg.header = msg->header;  // Preserve the original header
+        output_msg.header = msg->header;
     
         // Publish the cropped point cloud
         cropped_publisher_->publish(output_msg);
-        // RCLCPP_INFO(get_logger(), "*CROPPING!*");
     }
 
     Publisher<PointCloud2>::SharedPtr cropped_publisher_;
