@@ -30,6 +30,14 @@ def generate_launch_description():
         )
     )
 
+    mercator_node = Node(
+        package='bird_navigation',
+        executable='mercator_node',
+        name='mercator_node',
+        output='screen',
+        remappings=[("/height_grid","/local_grid")]
+    )
+
     g2si_node = Node(
         package='bird_navigation',
         executable='g2si_node',
@@ -92,6 +100,7 @@ def generate_launch_description():
         agent_lidar_launch,
         pcl_crop_node,
         occupancy_launch,
+        mercator_node,
         g2si_node,
         madgwick_lidar,
         # robot_local_node,
