@@ -35,7 +35,7 @@ def generate_launch_description():
         executable='mercator_node',
         name='mercator_node',
         output='screen',
-        remappings=[("/height_grid","/local_grid")]
+        remappings=[('/local_grid','/height_grid')]
     )
 
     g2si_node = Node(
