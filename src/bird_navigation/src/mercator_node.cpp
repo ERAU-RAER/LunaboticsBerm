@@ -20,7 +20,7 @@ public:
       : Node("mercator"), tf_buffer_(this->get_clock()),
         tf_listener_(tf_buffer_) {
     input_topic_ = this->declare_parameter("input_topic", "/local_grid");
-    output_topic_ = this->declare_parameter("output_topic", "/map");
+    output_topic_ = this->declare_parameter("output_topic", "/mercator/map");
     base_frame_ = this->declare_parameter("base_frame", "base_link");
     odom_frame_ = this->declare_parameter("odom_frame", "odom");
     map_frame_ = this->declare_parameter("map_frame", "map");
