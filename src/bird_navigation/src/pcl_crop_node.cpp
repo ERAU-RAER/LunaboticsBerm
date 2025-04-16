@@ -39,7 +39,7 @@ public:
             [this](const PointCloud2::SharedPtr msg) { processPointCloud(msg); });
 
         // Create a publisher for cropped point clouds
-        cropped_publisher_ = create_publisher<PointCloud2>("cropped_cloud", 10);
+        cropped_publisher_ = create_publisher<PointCloud2>("cloud_in", 10);
 
         RCLCPP_INFO(get_logger(), "Getting ready to CROP!!");
     }

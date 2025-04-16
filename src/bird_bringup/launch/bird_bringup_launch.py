@@ -21,12 +21,35 @@ def generate_launch_description():
         executable='pcl_crop_node',
         name='pcl_crop_node',
         output='screen',
-        remappings=[("/input_cloud","/livox/lidar")]
+        remappings=[
+            ("/input_cloud", "/livox/lidar"),
+            ("/cloud_cropped", "/cloud")
+        ]
+    )
+
+    pointcloud_to_laserscan_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan_node',
+        output='screen'
     )
 
     occupancy_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('bird_bringup'), 'launch', 'occupancy.launch.py')
+        )
+    )
+
+    async_slam_toolbox_node = Node(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='async_slam_toolbox_node',
+        output='screen'
+    )
+
+    nav2_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
         )
     )
 
@@ -61,6 +84,14 @@ def generate_launch_description():
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'ekf.yaml')]
     )
     
+    dummy_odom_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_publisher',
+        output='screen',
+        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_link']
+    )
+
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -81,13 +112,17 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        agent_lidar_launch,
+        # agent_lidar_launch,
         pcl_crop_node,
-        occupancy_launch,
-        g2si_node,
-        madgwick_lidar,
-        robot_local_node,
+        pointcloud_to_laserscan_node,
+        async_slam_toolbox_node,
+        nav2_launch,
+        # occupancy_launch,
+        # g2si_node,
+        # madgwick_lidar,
+        # robot_local_node,
+        dummy_odom_node,
         robot_state_publisher_node,
         joint_state_publisher_node,
-        foxglove_launch
+        # foxglove_launch
     ])
