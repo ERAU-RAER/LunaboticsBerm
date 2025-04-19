@@ -192,7 +192,7 @@ private:
 
     // moving‐window
     std::deque<std::array<double,6>> moving_window_;
-    const size_t max_window_size_ = 10;
+    const size_t max_window_size_ = 20;
 };
 
 int main(int argc, char *argv[])
