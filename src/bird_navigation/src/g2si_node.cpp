@@ -143,6 +143,20 @@ private:
         out.orientation = msg->orientation;
         out.angular_velocity = gyr_avg;
         out.linear_acceleration = conv_acc;
+        out.orientation_covariance = {
+            0.01, 0.0, 0.0,
+            0.0, 0.01, 0.0,
+            0.0, 0.0, 0.03
+          };
+        out.angular_velocity_covariance = {
+            0.02, 0.0, 0.0,
+            0.0, 0.02, 0.0,
+            0.0, 0.0, 0.01};
+        out.linear_acceleration_covariance = {
+            0.1, 0.0, 0.0,
+            0.0, 0.1, 0.0,
+            0.0, 0.0, 0.15
+          };
         publisher_->publish(out);
     }
 

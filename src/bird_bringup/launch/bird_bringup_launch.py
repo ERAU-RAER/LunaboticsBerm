@@ -115,8 +115,8 @@ def generate_launch_description():
         nav2_launch,
         g2si_node,
         madgwick_lidar,
-        # robot_local_node,
-        dummy_odom_node,
+        robot_local_node,
+        # dummy_odom_node,
         robot_state_publisher_node,
         joint_state_publisher_node,
         # foxglove_launch
