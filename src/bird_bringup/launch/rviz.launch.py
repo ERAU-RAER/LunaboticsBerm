@@ -15,7 +15,7 @@ def generate_launch_description():
             package='rviz2',
             # namespace='',
             executable='rviz2',
-            arguments=['-d', [os.path.join(pkg_dir, 'config', 'nav2_view.rviz')]]
+            arguments=['-d', [os.path.join(pkg_dir, 'rviz', 'nav2_view.rviz')]]
         )
     ])
 

@@ -5,10 +5,6 @@ from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource, AnyLaunchDescriptionSource
 
-cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
-cur_config_path = cur_path + '../config'
-rviz_config_path = os.path.join(cur_config_path, 'display_point_cloud_ROS2.rviz')
-
 def generate_launch_description():
     agent_lidar_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
