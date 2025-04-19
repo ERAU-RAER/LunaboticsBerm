@@ -43,6 +43,12 @@ def generate_launch_description():
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'slam.yaml')]
     )
 
+    online_sync_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('slam_toolbox'), 'launch', 'online_sync_launch.py')
+        )
+    )
+
     nav2_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py')
@@ -112,6 +118,7 @@ def generate_launch_description():
         pcl_crop_node,
         pointcloud_to_laserscan_node,
         sync_slam_toolbox_node,
+        # online_sync_launch,
         nav2_launch,
         g2si_node,
         madgwick_lidar,
