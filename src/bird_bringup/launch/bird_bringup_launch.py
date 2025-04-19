@@ -34,17 +34,12 @@ def generate_launch_description():
         output='screen'
     )
 
-    occupancy_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('bird_bringup'), 'launch', 'occupancy.launch.py')
-        )
-    )
-
-    async_slam_toolbox_node = Node(
+    sync_slam_toolbox_node = Node(
         package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='async_slam_toolbox_node',
-        output='screen'
+        executable='sync_slam_toolbox_node',
+        name='sync_slam_toolbox_node',
+        output='screen',
+        parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'slam.yaml')]
     )
 
     nav2_launch = IncludeLaunchDescription(
@@ -112,12 +107,11 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # agent_lidar_launch,
+        agent_lidar_launch,
         pcl_crop_node,
         pointcloud_to_laserscan_node,
-        async_slam_toolbox_node,
+        sync_slam_toolbox_node,
         nav2_launch,
-        # occupancy_launch,
         # g2si_node,
         # madgwick_lidar,
         # robot_local_node,
