@@ -56,7 +56,7 @@ def generate_launch_description():
         output='screen',
         remappings=[
             ('/imu/data_raw', '/livox/imu'),
-            ('/imu/data', '/imu/data_raw_livox')
+            ('/imu/data', '/livox/imu_mps2')
         ]
     )
 
@@ -66,7 +66,7 @@ def generate_launch_description():
         name='madgwick_lidar_node',
         output='screen',
         remappings=[
-            ('/imu/data_raw', '/imu/data_raw_livox'),
+            ('/imu/data_raw', '/livox/imu_mps2'),
             ('/imu/data', '/imu/data_livox')
         ],
         parameters=[os.path.join(get_package_share_directory('bird_bringup'), 'params', 'madgwick_lidar.yaml')]
@@ -113,8 +113,8 @@ def generate_launch_description():
         pointcloud_to_laserscan_node,
         sync_slam_toolbox_node,
         nav2_launch,
-        # g2si_node,
-        # madgwick_lidar,
+        g2si_node,
+        madgwick_lidar,
         # robot_local_node,
         dummy_odom_node,
         robot_state_publisher_node,
