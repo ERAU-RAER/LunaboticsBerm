@@ -51,7 +51,7 @@ def generate_launch_description():
 
     g2si_node = Node(
         package='bird_navigation',
-        executable='g2si_node',
+        executable='g2si_cpp_node',
         name='g2si_node',
         output='screen',
         remappings=[

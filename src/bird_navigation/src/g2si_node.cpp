@@ -31,7 +31,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "Converting IMU linear acceleration from g's to m/s²");
 
         // ===== START calibration in background =====
-        std::thread(&G2siNode::hlCalibrateIMU, this).detach();
+        std::thread(&G2siNode::hlCalibrateIMU, this, 1000).detach();
     }
 
     void hlCalibrateIMU(size_t num_samples = 500)
@@ -128,10 +128,15 @@ private:
         geometry_msgs::msg::Vector3 acc_avg, gyr_avg;
         acc_avg.x = avg[0]; acc_avg.y = avg[1]; acc_avg.z = avg[2];
         gyr_avg.x = avg[3]; gyr_avg.y = avg[4]; gyr_avg.z = avg[5];
-
+            
+        // Subtract gyro calibration offsets
+        gyr_avg.x -= gyro_offsets_[0];
+        gyr_avg.y -= gyro_offsets_[1];
+        gyr_avg.z -= gyro_offsets_[2];
+            
         // convert g→m/s²
         auto conv_acc = convertGToMs2(acc_avg);
-
+            
         // publish filtered + calibrated IMU
         sensor_msgs::msg::Imu out{};
         out.header = msg->header;
