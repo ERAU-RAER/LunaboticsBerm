@@ -12,7 +12,10 @@ using namespace std::chrono_literals;
 class G2siNode : public rclcpp::Node
 {
 public:
-    G2siNode() : Node("g2si_node"), data_received_(false), calibration_complete_(false)
+    G2siNode()
+    : Node("g2si_node"),
+      data_received_(false),
+      calibration_complete_(false)
     {
         this->declare_parameter<bool>("use_cal", true);
 
@@ -26,6 +29,9 @@ public:
             5s, std::bind(&G2siNode::checkDataReceived, this));
 
         RCLCPP_INFO(this->get_logger(), "Converting IMU linear acceleration from g's to m/s²");
+
+        // ===== START calibration in background =====
+        std::thread(&G2siNode::hlCalibrateIMU, this).detach();
     }
 
     void hlCalibrateIMU(size_t num_samples = 500)
@@ -35,12 +41,12 @@ public:
 
         if (!use_cal)
         {
-            RCLCPP_INFO(this->get_logger(), "Calibration is disabled via parameter. Skipping calibration.");
+            RCLCPP_INFO(this->get_logger(), "Calibration disabled via parameter, skipping.");
             calibration_complete_ = true;
             return;
         }
 
-        RCLCPP_INFO(this->get_logger(), "Starting IMU calibration... Keep sensor flat and steady!");
+        RCLCPP_INFO(this->get_logger(), "Starting IMU calibration... keep sensor flat & steady!");
 
         {
             std::unique_lock<std::mutex> lock(calibration_mutex_);
@@ -48,40 +54,27 @@ public:
                     return calibration_data_.size() >= num_samples;
                 }))
             {
-                RCLCPP_WARN(this->get_logger(), "Calibration timed out. Not enough samples collected.");
+                RCLCPP_WARN(this->get_logger(), "Calibration timed out (got %zu of %zu samples).",
+                            calibration_data_.size(), num_samples);
+                calibration_complete_ = true;   // <— don’t block forever
                 return;
             }
         }
 
-        double ax = 0.0, ay = 0.0, az = 0.0, gx = 0.0, gy = 0.0, gz = 0.0;
-
-        for (const auto &data : calibration_data_)
+        // compute offsets
+        double ax=0, ay=0, az=0, gx=0, gy=0, gz=0;
+        for (auto &d : calibration_data_)
         {
-            ax += data[0];
-            ay += data[1];
-            az += data[2];
-            gx += data[3];
-            gy += data[4];
-            gz += data[5];
+            ax += d[0]; ay += d[1]; az += d[2];
+            gx += d[3]; gy += d[4]; gz += d[5];
         }
+        size_t n = calibration_data_.size();
+        accel_offsets_ = { ax/n, ay/n, (az/n)-1.0 };
+        gyro_offsets_  = { gx/n, gy/n, gz/n };
 
-        size_t actual_samples = calibration_data_.size();
-        accel_offsets_ = {
-            ax / actual_samples,
-            ay / actual_samples,
-            (az / actual_samples) - 1.0
-        };
-
-        gyro_offsets_ = {
-            gx / actual_samples,
-            gy / actual_samples,
-            gz / actual_samples
-        };
-
-        RCLCPP_INFO(this->get_logger(), "IMU Calibration complete!");
-        RCLCPP_INFO(this->get_logger(), "Accel Offsets: x=%.3f, y=%.3f, z=%.3f",
+        RCLCPP_INFO(this->get_logger(), "Calibration complete! Accel offsets (g): x=%.3f y=%.3f z=%.3f",
                     accel_offsets_[0], accel_offsets_[1], accel_offsets_[2]);
-        RCLCPP_INFO(this->get_logger(), "Gyro Offsets: x=%.3f, y=%.3f, z=%.3f",
+        RCLCPP_INFO(this->get_logger(), "Gyro offsets (rad/s): x=%.3f y=%.3f z=%.3f",
                     gyro_offsets_[0], gyro_offsets_[1], gyro_offsets_[2]);
 
         calibration_complete_ = true;
@@ -93,10 +86,10 @@ private:
         if (!data_received_)
         {
             data_received_ = true;
-            RCLCPP_INFO(this->get_logger(), "Found you! Received first IMU sample.");
+            RCLCPP_INFO(this->get_logger(), "First IMU sample received.");
         }
 
-        std::array<double, 6> new_sample = {
+        std::array<double,6> sample = {
             msg->linear_acceleration.x,
             msg->linear_acceleration.y,
             msg->linear_acceleration.z,
@@ -105,97 +98,81 @@ private:
             msg->angular_velocity.z
         };
 
+        // still calibrating? keep gathering and bail out
         if (!calibration_complete_)
         {
             {
                 std::lock_guard<std::mutex> lock(calibration_mutex_);
-                calibration_data_.emplace_back(new_sample);
+                calibration_data_.push_back(sample);
                 if (calibration_data_.size() % 50 == 0)
-                {
-                    RCLCPP_INFO(this->get_logger(), "Calibration samples collected: %zu", calibration_data_.size());
-                }
+                    RCLCPP_INFO(this->get_logger(), "Collected %zu calibration samples",
+                                calibration_data_.size());
             }
             calibration_cv_.notify_one();
             return;
         }
 
-        // Add to moving window
-        moving_window_.push_back(new_sample);
+        // post‐calibration: sliding window
+        moving_window_.push_back(sample);
         if (moving_window_.size() > max_window_size_)
-        {
             moving_window_.pop_front();
-        }
 
-        // Compute average
-        std::array<double, 6> avg = {0, 0, 0, 0, 0, 0};
-        for (const auto &s : moving_window_)
-        {
-            for (size_t i = 0; i < 6; ++i)
-            {
-                avg[i] += s[i];
-            }
-        }
-        for (size_t i = 0; i < 6; ++i)
-        {
+        // compute average
+        std::array<double,6> avg = {0,0,0,0,0,0};
+        for (auto &w : moving_window_)
+            for (size_t i=0; i<6; ++i)
+                avg[i] += w[i];
+        for (size_t i=0; i<6; ++i)
             avg[i] /= moving_window_.size();
-        }
 
-        geometry_msgs::msg::Vector3 averaged_accel, averaged_gyro;
-        averaged_accel.x = avg[0];
-        averaged_accel.y = avg[1];
-        averaged_accel.z = avg[2];
-        averaged_gyro.x = avg[3];
-        averaged_gyro.y = avg[4];
-        averaged_gyro.z = avg[5];
+        geometry_msgs::msg::Vector3 acc_avg, gyr_avg;
+        acc_avg.x = avg[0]; acc_avg.y = avg[1]; acc_avg.z = avg[2];
+        gyr_avg.x = avg[3]; gyr_avg.y = avg[4]; gyr_avg.z = avg[5];
 
-        geometry_msgs::msg::Vector3 converted_accel = convertGToMs2(averaged_accel);
+        // convert g→m/s²
+        auto conv_acc = convertGToMs2(acc_avg);
 
-        auto new_imu_msg = sensor_msgs::msg::Imu();
-        new_imu_msg.header = msg->header;
-        new_imu_msg.orientation = msg->orientation;
-        new_imu_msg.angular_velocity = averaged_gyro;
-        new_imu_msg.linear_acceleration = converted_accel;
-
-        publisher_->publish(new_imu_msg);
+        // publish filtered + calibrated IMU
+        sensor_msgs::msg::Imu out{};
+        out.header = msg->header;
+        out.orientation = msg->orientation;
+        out.angular_velocity = gyr_avg;
+        out.linear_acceleration = conv_acc;
+        publisher_->publish(out);
     }
 
-    geometry_msgs::msg::Vector3 convertGToMs2(const geometry_msgs::msg::Vector3 &accel_in_gs)
+    geometry_msgs::msg::Vector3 convertGToMs2(const geometry_msgs::msg::Vector3 &in)
     {
-        constexpr double conversion_factor = 9.81;
-        geometry_msgs::msg::Vector3 accel_in_ms2;
-
-        accel_in_ms2.x = (accel_in_gs.x - accel_offsets_[0]) * conversion_factor;
-        accel_in_ms2.y = (accel_in_gs.y - accel_offsets_[1]) * conversion_factor;
-        accel_in_ms2.z = (accel_in_gs.z - accel_offsets_[2]) * conversion_factor;
-
-        return accel_in_ms2;
+        constexpr double G = 9.81;
+        geometry_msgs::msg::Vector3 out;
+        out.x = (in.x - accel_offsets_[0]) * G;
+        out.y = (in.y - accel_offsets_[1]) * G;
+        out.z = (in.z - accel_offsets_[2]) * G;
+        return out;
     }
 
     void checkDataReceived()
     {
         if (!data_received_)
-        {
-            RCLCPP_WARN(this->get_logger(), "Hello? Is anyone out there? Still waiting on first IMU sample...");
-        }
+            RCLCPP_WARN(this->get_logger(), "Waiting for IMU data...");
     }
 
-    // ROS 2 interfaces
+    // ROS interfaces
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr publisher_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscription_;
     rclcpp::TimerBase::SharedPtr timer_;
 
-    // State
+    // state
     bool data_received_;
     bool calibration_complete_;
-
-    std::vector<std::array<double, 6>> calibration_data_;
+    std::vector<std::array<double,6>> calibration_data_;
     std::mutex calibration_mutex_;
     std::condition_variable calibration_cv_;
 
-    std::array<double, 3> accel_offsets_{0.0, 0.0, 0.0};
-    std::array<double, 3> gyro_offsets_{0.0, 0.0, 0.0};
+    std::array<double,3> accel_offsets_{0,0,0}, gyro_offsets_{0,0,0};
 
-    std::deque<std::array<double, 6>> moving_window_;
+    // moving‐window
+    std::deque<std::array<double,6>> moving_window_;
     const size_t max_window_size_ = 10;
 };
 
@@ -203,10 +180,6 @@ int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<G2siNode>();
-
-    // Call calibration before spinning (or trigger elsewhere)
-    node->hlCalibrateIMU();
-
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
