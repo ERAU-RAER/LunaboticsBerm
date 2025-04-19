@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
@@ -29,7 +30,7 @@ class g2siNode(Node):
         # Timer to check if IMU data is received
         self.timer = self.create_timer(5.0, self.check_data_received)
 
-        self.get_logger().info('Converting IMU linear acceleration from g\'s to m/s²')
+        self.get_logger().info('Python script Converting IMU linear acceleration from g\'s to m/s²')
 
     def listener_callback(self, msg):
         """
