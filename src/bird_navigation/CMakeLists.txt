@@ -12,6 +12,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(pcl_ros REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 
 # uncomment the following section in order to fill in
@@ -25,7 +26,7 @@ include_directories(include)
 add_executable(g2si_cpp_node src/g2si_node.cpp)
 ament_target_dependencies(g2si_cpp_node rclcpp sensor_msgs)
 add_executable(pcl_crop_node src/pcl_crop_node.cpp)
-ament_target_dependencies(pcl_crop_node rclcpp sensor_msgs pcl_ros)
+ament_target_dependencies(pcl_crop_node rclcpp sensor_msgs pcl_ros tf2_ros)
 
 # Install Cpp executables
 install(TARGETS

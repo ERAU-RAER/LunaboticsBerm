@@ -31,7 +31,8 @@ def generate_launch_description():
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
         name='pointcloud_to_laserscan_node',
-        output='screen'
+        output='screen',
+        parameters=[{'target_frame': 'base_footprint'}]
     )
 
     sync_slam_toolbox_node = Node(
