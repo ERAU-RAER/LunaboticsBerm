@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ctype.h>
 #include "ClearCore.h"
 #include "mcvc_cmds.h"
 
@@ -6,6 +7,54 @@
 #define SerialPort ConnectorUsb
 
 MotorDriver* motors[] = { &ConnectorM0, &ConnectorM1, &ConnectorM2, &ConnectorM3 };
+bool motorDirection[] = {1, 1, 0, 0}; // 1 : non-inverted - 0 : inverted
+ 
+void handleCommand(const char* input) {
+  // sanity: first char is command letter
+  char cmd = input[0];
+  if (cmd >= 'A' && cmd <= 'Z') cmd = cmd - 'A' + 'a';
+  if (cmd < 'a' || cmd > 'z') {
+      SerialPort.SendLine("ERR: invalid command");
+      return;
+  }
+
+  // parse motor number (can be multi‐digit)
+  int pos = 1, motorNum = 0;
+  if (!isdigit(input[pos])) {
+      SerialPort.SendLine("ERR: bad motor #");
+      return;
+  }
+  while (isdigit(input[pos])) {
+      motorNum = motorNum * 10 + (input[pos++] - '0');
+  }
+  if (motorNum < 0 || motorNum > 3) {
+      SerialPort.SendLine("ERR: bad motor #");
+      return;
+  }
+
+  // skip spaces, then parse argument
+  while (input[pos] == ' ') pos++;
+  int32_t arg = atoi(&input[pos]);
+
+  switch (cmd) {
+    case 'v':
+      if (!motorDirection[motorNum]) {
+        arg = -arg;
+      }
+      CommandVelocity(arg, *motors[motorNum]);
+      
+      {
+        char msg[48];
+        snprintf(msg, sizeof(msg), "OK: velocity set to %ld on v%d", (long)arg, motorNum);
+        SerialPort.SendLine(msg);
+      }
+      
+      break;
+    default:
+      SerialPort.SendLine("ERR: unknown cmd");
+      break;
+  }
+}
 
 int main() {
   // Sets all motor connectors to the correct mode for Follow Digital
@@ -20,6 +69,16 @@ int main() {
   while (!SerialPort && Milliseconds() - startTime < timeout) {
       continue;
   }
+
+  // Welcome message
+  SerialPort.SendLine("Good Morning, B.I.R.D. ...");
+  SerialPort.SendLine("╰╮╰╮╰╮");
+  SerialPort.SendLine("╭━━━━━━━╮╱ ");
+  SerialPort.SendLine("╰━━━━━━━╯╱ ");
+  SerialPort.SendLine("┃╭╭╮┏┏┏┏┣━╮");
+  SerialPort.SendLine("┃┃┃┃┣┣┣┣┃╱┃ ");
+  SerialPort.SendLine("┃╰╰╯┃┃┗┗┣━╯ ");
+  SerialPort.SendLine("╰━━━━━━━╯ ");
 
   // Enables the motor
   motors[0] -> EnableRequest(true);
@@ -41,68 +100,35 @@ int main() {
   }
   SerialPort.SendLine("Motors Ready");
 
-  const int IN_BUFFER_LEN = 32;
-  char input[IN_BUFFER_LEN+1];
+  const int IN_BUFFER_LEN = 64;
+  char  input[IN_BUFFER_LEN+1];
+  int   idx      = 0;
+  bool  overflow = false;
 
   while (true) {
-
-    // clear buffer
-    for (int i = 0; i <= IN_BUFFER_LEN; ++i) {
-      input[i] = '\0';
-    }
-    // read up to IN_BUFFER_LEN chars or until no more data
-    bool overflow = false;
-    int i = 0;
-    while (i < IN_BUFFER_LEN && SerialPort.CharPeek() != -1) {
-      input[i++] = (char)SerialPort.CharGet();
+    // consume all available chars
+    while (SerialPort.CharPeek() != -1) {
+      char c = (char)SerialPort.CharGet();
       Delay_ms(1);
+      if (c == '\r') {
+        continue;
+      } else if (c == '\n') {
+        input[idx] = '\0';
+        if (overflow) {
+          SerialPort.SendLine("ERR: buffer overrun");
+        } else if (idx > 0) {
+          handleCommand(input);
+        }
+        idx      = 0;
+        overflow = false;
+      } else {
+        if (idx < IN_BUFFER_LEN) {
+          input[idx++] = c;
+        } else {
+          overflow = true;
+        }
+      }
     }
-    // if there's still data, we overflowed
-    if (SerialPort.CharPeek() != -1) {
-      overflow = true;
-      SerialPort.FlushInput();
-    }
-    // nothing read → skip
-    if (i == 0) {
-      continue;
-    }
-    if (overflow) {
-      SerialPort.SendLine("ERR: buffer overrun");
-      continue;
-    }
-
-    // command sanity: first must be letter
-    char cmd = input[0];
-    if (!((cmd >= 'a' && cmd <= 'z') || (cmd >= 'A' && cmd <= 'Z'))) {
-      SerialPort.SendLine("ERR: invalid command");
-      continue;
-    }
-    // normalize to lowercase
-    if (cmd >= 'A' && cmd <= 'Z') {
-      cmd = cmd - 'A' + 'a';
-    }
-
-    // parse motor number & argument
-    int motorNum = atoi(&input[1]);               // digits after letter
-    int32_t arg     = atoi(&input[2]);             // e.g. velocity
-    if (motorNum < 0 || motorNum > 3) {
-      SerialPort.SendLine("ERR: bad motor #");
-      continue;
-    }
-
-    // punch it
-    switch (cmd) {
-      case 'v':  // velocity command: "v# <vel>"
-        // safety: set torque limit before commanding
-        CommandVelocity(arg, *motors[motorNum]);
-        SerialPort.SendLine("OK: velocity set");
-        break;
-
-      // you can add other cases here (e, d, m, etc.)
-
-      default:
-        SerialPort.SendLine("ERR: unknown cmd");
-        break;
-    }
+    // no data → loop
   }
 }
