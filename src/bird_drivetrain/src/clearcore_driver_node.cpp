@@ -5,6 +5,7 @@
 #include <serial/serial.h>
 #include <chrono>
 #include <string>
+#include <cmath>
 
 using namespace std::chrono_literals;
 
@@ -56,14 +57,21 @@ private:
         // simple diff‑drive mapping
         double v =  msg->linear.x;
         double w =  msg->angular.z;
-        double wheel_circumference = 3.141592653589793 * wheel_diameter_;
-        int vel_left  = static_cast<int>((v - w * track_width_ / 2.0) / wheel_circumference * gear_ratio_);
-        int vel_right = static_cast<int>((v + w * track_width_ / 2.0) / wheel_circumference * gear_ratio_);
+        double wheel_circumference = M_PI * wheel_diameter_;
+        double rpm_left  = ((v - (w * track_width_ / 2.0)) * gear_ratio_ * 60 )/ wheel_circumference;
+        double rpm_right = ((v + (w * track_width_ / 2.0)) * gear_ratio_ * 60 )/ wheel_circumference;
+        int vel_left = std::lround(rpm_left);
+        int vel_right = std::lround(rpm_right);
 
         std::string cmd0 = "v0 " + std::to_string(vel_left) + "\r\n";
         std::string cmd1 = "v1 " + std::to_string(vel_left) + "\r\n";
         std::string cmd2 = "v2 " + std::to_string(vel_right) + "\r\n";
         std::string cmd3 = "v3 " + std::to_string(vel_right) + "\r\n";
+
+        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd0.c_str());
+        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd1.c_str());
+        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd2.c_str());
+        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd3.c_str());
 
         serial_.write(cmd0);
         serial_.write(cmd1);
