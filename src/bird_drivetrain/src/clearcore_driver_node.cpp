@@ -32,6 +32,15 @@ public:
             return;
         }
 
+        // setup
+        setVerboseFeedback(true); // enable verbose feedback
+        setMotorsEnabled(true);  // enable motors
+        // query initial motor status
+        queryMotorStatus(0);
+        queryMotorStatus(1);
+        queryMotorStatus(2);
+        queryMotorStatus(3);
+
         // subscriber to cmd_vel
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&ClearcoreDriverNode::cmdVelCallback, this, std::placeholders::_1));
 
@@ -58,8 +67,8 @@ private:
         double w =  msg->angular.z;
         double wheel_circumference = 3.141592653589793 * wheel_diameter_;
         double steps_per_meter = steps_per_rev_ / wheel_circumference;
-        int vel_left  = static_cast<int>((v - w * wheel_base_ / 2.0) * steps_per_meter);
-        int vel_right = static_cast<int>((v + w * wheel_base_ / 2.0) * steps_per_meter);
+        int vel_left  = static_cast<int>((v - w * track_width_ / 2.0) * steps_per_meter);
+        int vel_right = static_cast<int>((v + w * track_width_ / 2.0) * steps_per_meter);
 
         std::string cmd0 = "v0 " + std::to_string(vel_left)  + "\n";
         std::string cmd1 = "v1 " + std::to_string(vel_left) + "\n";
@@ -99,8 +108,8 @@ private:
         serial_.write(cmd);
     }
 
-    void queryMotorStatus() {
-        std::string cmd = "q0s\n";
+    void queryMotorStatus(int motor_id) {
+        std::string cmd = "q" + std::to_string(motor_id) + "s\n";
         serial_.write(cmd);
     }
 
@@ -114,7 +123,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
 
     // robot-specific constants (tune these)
-    const double wheel_base_      = 0.5;    // meters between left/right wheels
+    const double track_width_      = 0.585795;    // meters between left/right wheels
     const double steps_per_rev_   = 800.0;
     const double wheel_diameter_  = 0.230;  // in meters
 };
