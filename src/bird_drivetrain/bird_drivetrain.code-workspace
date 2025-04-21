@@ -1,0 +1,45 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../../../../../home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm"
+		},
+		{
+			"name": "bird_drivetrain_mcu",
+			"path": "bird_drivetrain_mcu"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.ipp": "cpp",
+			"atomic": "cpp",
+			"barrier": "cpp",
+			"condition_variable": "cpp",
+			"future": "cpp",
+			"latch": "cpp"
+		},
+		"python.autoComplete.extraPaths": [
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/teleop_input/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/livox_ros_driver2/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/g2si/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_state_machine/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_navigation/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_interfaces/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_description/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/arduino_serial_package/lib/python3.10/site-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		],
+		"python.analysis.extraPaths": [
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/teleop_input/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/livox_ros_driver2/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/g2si/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_state_machine/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_navigation/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_interfaces/local/lib/python3.10/dist-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/bird_description/lib/python3.10/site-packages",
+			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/arduino_serial_package/lib/python3.10/site-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		]
+	}
+}
