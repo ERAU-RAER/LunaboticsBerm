@@ -10,12 +10,13 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(serial REQUIRED)
 
 include_directories(include)
 
 add_executable(clearcore_driver_node src/clearcore_driver_node.cpp)
-ament_target_dependencies(clearcore_driver_node rclcpp geometry_msgs std_msgs serial)
+ament_target_dependencies(clearcore_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
 
 install(TARGETS
   clearcore_driver_node
