@@ -67,3 +67,12 @@ bool LimitTorque(double limit, ClearCore::MotorDriver& motor) {
     motor.MotorInADuty(duty);
     return true;
 }
+/** 
+ * @brief Gets current speed in RPM
+ * @param motor Motor driver instance.
+ * @return current speed in RPM
+ */
+// double GetSpeed(ClearCore::MotorDriver& motor) {
+//     double currentSpeed = EncoderIn.Velocity(); //look into this and motor.statusreg.bit
+//     return currentSpeed;
+// }

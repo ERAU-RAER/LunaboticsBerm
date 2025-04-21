@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include "ClearCore.h"
 #include "mcvc_cmds.h"
+#include "robot_characteristics.h"
 
 #define baudRate 115200
 #define SerialPort ConnectorUsb
@@ -55,6 +56,19 @@ void handleCommand(const char* input) {
       break;
   }
 }
+
+// void getWheelOdom(){
+//   double currentSpeed_rpm;
+//   double currentSpeed_mps;
+//   for (int i = 0; i < 4; i++) {
+//       currentSpeed_rpm = GetSpeed(*motors[i]);
+//       currentSpeed_mps = currentSpeed_rpm * wheel_diameter_ * M_PI;
+      
+//       char msg[64];
+//       snprintf(msg, sizeof(msg), "v%d speed: %.2f", i, currentSpeed_mps);
+//       SerialPort.SendLine(msg);
+//   }
+// }
 
 int main() {
   // Sets all motor connectors to the correct mode for Follow Digital
@@ -129,6 +143,6 @@ int main() {
         }
       }
     }
-    // no data → loop
+    // getWheelOdom();
   }
 }

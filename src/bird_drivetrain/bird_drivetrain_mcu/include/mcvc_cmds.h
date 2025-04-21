@@ -28,5 +28,7 @@ bool CommandVelocity(int32_t commandedVelocity, ClearCore::MotorDriver& motor);
  */
 bool LimitTorque(double limit, ClearCore::MotorDriver& motor);
 
+// double GetSpeed(ClearCore::MotorDriver& motor);
+
 /// @}
 #endif  // MCVC_CMDS_H
