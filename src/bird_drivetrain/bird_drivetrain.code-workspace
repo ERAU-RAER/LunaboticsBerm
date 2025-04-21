@@ -15,7 +15,8 @@
 			"barrier": "cpp",
 			"condition_variable": "cpp",
 			"future": "cpp",
-			"latch": "cpp"
+			"latch": "cpp",
+			"numbers": "cpp"
 		},
 		"python.autoComplete.extraPaths": [
 			"/home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm/install/teleop_input/lib/python3.10/site-packages",
