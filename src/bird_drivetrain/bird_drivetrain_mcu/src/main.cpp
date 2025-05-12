@@ -99,6 +99,11 @@ int main() {
   motors[1] -> EnableRequest(true);
   motors[2] -> EnableRequest(true);
   motors[3] -> EnableRequest(true);
+
+  for (auto m : motors) {
+    m->MotorInADuty(0.0);   // 0% → use primary (100%) torque limits
+  }
+
   LimitTorque(100, *motors[0]);
   LimitTorque(100, *motors[1]);
   LimitTorque(100, *motors[2]);

@@ -76,3 +76,13 @@ bool LimitTorque(double limit, ClearCore::MotorDriver& motor) {
 //     double currentSpeed = EncoderIn.Velocity(); //look into this and motor.statusreg.bit
 //     return currentSpeed;
 // }
+
+/**
+* @brief Sets input A low in CPM_A
+*/
+void useFullTorque(ClearCore::MotorDriver& motor) {
+    // Set the input A low
+    if(motor.MotorInAState()) {
+        motor.MotorInAState(false);
+    }
+}
