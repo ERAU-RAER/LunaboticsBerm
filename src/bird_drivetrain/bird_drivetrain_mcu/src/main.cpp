@@ -4,6 +4,8 @@
 #include "mcvc_cmds.h"
 #include "robot_characteristics.h"
 
+#include "drive.h"
+
 #define baudRate 115200
 #define SerialPort ConnectorUsb
 
@@ -57,20 +59,8 @@ void handleCommand(const char* input) {
   }
 }
 
-// void getWheelOdom(){
-//   double currentSpeed_rpm;
-//   double currentSpeed_mps;
-//   for (int i = 0; i < 4; i++) {
-//       currentSpeed_rpm = GetSpeed(*motors[i]);
-//       currentSpeed_mps = currentSpeed_rpm * wheel_diameter_ * M_PI;
-      
-//       char msg[64];
-//       snprintf(msg, sizeof(msg), "v%d speed: %.2f", i, currentSpeed_mps);
-//       SerialPort.SendLine(msg);
-//   }
-// }
-
 int main() {
+
   // Sets all motor connectors to the correct mode for Follow Digital
   // Velocity, Bipolar PWM mode.
   MotorMgr.MotorModeSet(MotorManager::MOTOR_ALL,Connector::CPM_MODE_A_PWM_B_PWM);
@@ -148,6 +138,6 @@ int main() {
         }
       }
     }
-    // getWheelOdom();
+    pushWheelSpeedsToJetson();
   }
 }
