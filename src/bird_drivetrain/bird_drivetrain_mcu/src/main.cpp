@@ -8,6 +8,7 @@
 
 #define baudRate 115200
 #define SerialPort ConnectorUsb
+#define outputPin ConnectorIO1
 
 MotorDriver* motors[] = { &ConnectorM0, &ConnectorM1, &ConnectorM2, &ConnectorM3 };
 bool motorDirection[] = {1, 1, 0, 0}; // 1 : non-inverted - 0 : inverted
@@ -61,6 +62,14 @@ void handleCommand(const char* input) {
 
 int main() {
 
+  outputPin.Mode(Connector::OUTPUT_PWM);
+
+  outputPin.PwnDuty(127);
+  delay(1000);
+  outputPin.PwmDuty(0);
+  delay(1000);
+  outputPin.PwmDuty(255);
+  
   // Sets all motor connectors to the correct mode for Follow Digital
   // Velocity, Bipolar PWM mode.
   MotorMgr.MotorModeSet(MotorManager::MOTOR_ALL,Connector::CPM_MODE_A_PWM_B_PWM);
