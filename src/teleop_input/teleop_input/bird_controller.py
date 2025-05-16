@@ -41,10 +41,6 @@ class JoyToCmdVel:
 
         self.prev_button1 = msg.buttons[1]
         self.cmdvel_pub.publish(twist_msg)
-        
-        # Print indices of currently pressed buttons
-        pressed_buttons = [i for i, button in enumerate(msg.buttons) if button]
-        self.node.get_logger().info("Pressed buttons: {}".format(pressed_buttons))
 
 def main(args=None):
 
