@@ -3,55 +3,36 @@ import rclpy
 from sensor_msgs.msg import Joy
 
 from geometry_msgs.msg import Twist
-
+from std_msgs.msg import Bool
 
 class JoyToCmdVel:
-    
 
     def __init__(self):
 
-        self.max_speed = .1
-        self.old_bumper = 0
-        self.old_vibe_button = 0
-        self.vibe = 0
-        
         self.node = rclpy.create_node('joy_to_cmdvel')
+
+        self.max_speed = self.node.declare_parameter('max_speed', 0.1).value
 
         self.joy_sub = self.node.create_subscription(Joy, 'joy', self.joy_callback, 10)
 
         self.cmdvel_pub = self.node.create_publisher(Twist, 'cmd_vel', 10)
+        self.zeropt_pub = self.node.create_publisher(Bool, 'zeropt', 10)
 
 
     # Convert joy message into twist message
     def joy_callback(self, msg):
-
-        if msg.buttons[4] == 1 and self.old_bumper == 0 and self.max_speed > .7:
-            self.max_speed -= .1
-            self.old_bumper = 1
-        elif msg.buttons[5] == 1 and self.old_bumper == 0 and self.max_speed < 1:
-            self.max_speed += .1
-            self.old_bumper = 1
-        elif msg.buttons[4] == 0 and msg.buttons[5] == 0 and self.old_bumper == 1:
-            self.old_bumper = 0
-
         twist_msg = Twist()
-
-        twist_msg.linear.x = round(-self.max_speed*((msg.axes[5]-1) - (msg.axes[2]-1))/2,3) # forward/Backward
-        twist_msg.angular.z = -(msg.axes[3]) # left/right
-        twist_msg.linear.z = msg.axes[7] # bucket vertical travel
-        twist_msg.angular.y = float(msg.axes[6]) # bucket rotation
+        twist_msg.linear.x = msg.axes[3] * self.max_speed
+        twist_msg.angular.z = msg.axes[2] * self.max_speed
+        twist_msg.linear.z = msg.axes[5]
+        twist_msg.angular.y = msg.axes[4]
+        self.cmdvel_pub.publish(twist_msg)
         
-        #vibrate bucket
-        if msg.buttons[1] == 1 and self.old_vibe_button == 0:
-            self.vibe = not self.vibe
-            twist_msg.angular.x = float(self.vibe)
-            self.old_vibe_button = 1
-        elif msg.buttons[1] == 0 and self.old_vibe_button == 1:
-            self.old_vibe_button = 0
-        
+        # Print indices of currently pressed buttons
+        pressed_buttons = [i for i, button in enumerate(msg.buttons) if button]
+        self.node.get_logger().info("Pressed buttons: {}".format(pressed_buttons))
 
-
-def controller(args=None):
+def main(args=None):
 
     rclpy.init(args=args)
 
@@ -59,7 +40,7 @@ def controller(args=None):
 
     rclpy.spin(joy_to_cmdvel.node)
 
-    joy_to_cmdvel2.node.destroy_node()
+    joy_to_cmdvel.node.destroy_node()
 
     rclpy.shutdown()
 

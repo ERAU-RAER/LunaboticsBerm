@@ -24,7 +24,7 @@ setup(
         'console_scripts': [
             'teleop_twist_keyboard = teleop_input.teleop_twist_keyboard:main',
             'evan_scheme = teleop_input.evan_scheme:controller',
-            'collin_scheme = teleop_input.collin_scheme:controller'
+            'collin_scheme = teleop_input.collin_scheme:main'
         ],
     },
 )
