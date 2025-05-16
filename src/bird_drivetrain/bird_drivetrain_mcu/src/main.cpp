@@ -183,7 +183,8 @@
  */
 
  #include "ClearCore.h"
- #include "ledc.h"
+ #include "Arduino.h"
+//  #include "ledc.h"
 
  // Specify which output pin to write digital PWM to.
  // PWM-capable pins: IO-0 through IO-5.
@@ -191,21 +192,35 @@
  //       output using an H-Bridge. See the WriteHBridgeOutput example.
  #define outputPin ConnectorIO3
  
+#define MAX_ANGLE 180
+#define MIN_ANGLE 45
+#define MAX_MS 2.5
+#define MIN_MS 1
+ 
  int main() {
      // Set up the output pin for PWM output mode.
-    outputPin.Mode(Connector::OUTPUT_PWM);
-   
-    while (true) {
-        // Sweep through all PWM duty cycle values from 0 to 255.
-        for (int duty = 0; duty <= 255; duty++) {
-         outputPin.PwmDuty(duty);
-         Delay_ms(50);
-        }
+    outputPin.Mode(Connector::OUTPUT_DIGITAL);
 
-        // Sweep back down from 255 to 0.
-        for (int duty = 255; duty >= 0; duty--) {
-         outputPin.PwmDuty(duty);
-         Delay_ms(50);
-        }
-    }
+    // Begin a 100ms on/200ms off pulse on IO-1's output that will complete
+    // 20 cycles and prevent further code execution until the cycles are
+    // complete
+    int angle = 90; // Example angle value
+    float ms_off = map(angle, MIN_ANGLE, MAX_ANGLE, MIN_MS, MAX_MS);
+    // float ms_off = 1;
+    float ms_on = 20 - ms_off;
+    outputPin.OutputPulsesStart(ms_on, ms_off, 0, true);
+   
+    // while (true) {
+    //     // Sweep through all PWM duty cycle values from 0 to 255.
+    //     for (int duty = 0; duty <= 255; duty++) {
+    //      outputPin.PwmDuty(duty);
+    //      Delay_ms(50);
+    //     }
+
+    //     // Sweep back down from 255 to 0.
+    //     for (int duty = 255; duty >= 0; duty--) {
+    //      outputPin.PwmDuty(duty);
+    //      Delay_ms(50);
+    //     }
+    // }
  }
