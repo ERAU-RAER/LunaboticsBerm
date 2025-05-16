@@ -1,0 +1,93 @@
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Float64
+import serial
+import threading
+
+# a translator between ROS 2 and linac controller
+# in simple terms >
+# some other node sends a Twist message like “linear.x = 0.4”
+# this node turns it into a serial message: "POS:70"
+# it sends that to your actuator controller
+# the actuator moves to 70% position
+# the actuator sends back "CUR:70"
+# this node publishes 70.0 to /actuator_position
+
+class LinearActuatorDriver(Node):
+    def __init__(self):
+        # creates ROS node & names it
+        super().__init__('linac_driver') 
+
+        # serial set up & connection
+        try:
+            self.serial = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+            self.get_logger().info("Connected to actuator via serial.")
+        except serial.SerialException as e:
+            self.get_logger().error(f"Serial connection failed: {e}")
+            return
+
+        # listening for Twist commands
+        self.subscription = self.create_subscription(
+            Twist,
+            '/cmd_vel',
+            self.twist_callback,
+            10
+        )
+
+        # tells actuator's position
+        self.state_publisher = self.create_publisher(
+            Float64,
+            '/actuator_position',
+            10
+        )
+
+        # reading feedback from actuator
+        self._running = True
+        self.reader_thread = threading.Thread(target=self.read_serial_loop, daemon=True)
+        self.reader_thread.start()
+
+    # handles incoming movement commands
+    def twist_callback(self, msg):
+        # Convert linear.x (-1 to 1) into a position command (0 to 100)
+        target = int(max(0, min(100, (msg.linear.x + 1.0) * 50)))
+
+        # Example protocol: send "POS:50\n"
+        command = f"POS:{target}\n"
+
+        try:
+            self.serial.write(command.encode())
+            self.get_logger().info(f"Sent command: {command.strip()}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to send command: {e}")
+
+    def read_serial_loop(self):
+        while self._running:
+            try:
+                # listens to the actuator
+                line = self.serial.readline().decode().strip()
+                if line.startswith("CUR:"):  # e.g., "CUR:72"
+                    current_position = float(line.split(":")[1])
+                    # turns received number into a message and sends it
+                    msg = Float64()
+                    msg.data = current_position
+                    self.state_publisher.publish(msg)
+                    self.get_logger().debug(f"Published position: {current_position}")
+            except Exception as e:
+                self.get_logger().warn(f"Serial read error: {e}")
+
+    def destroy_node(self):
+        self._running = False
+        if self.serial and self.serial.is_open:
+            self.serial.close()
+        super().destroy_node()
+
+def main(args=None):
+    rclpy.init(args=args)
+    driver = LinearActuatorDriver()
+    rclpy.spin(driver)
+    driver.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
