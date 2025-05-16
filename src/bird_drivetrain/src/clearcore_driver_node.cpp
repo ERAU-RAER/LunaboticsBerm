@@ -15,7 +15,7 @@ public:
     ClearcoreDriverNode() : Node("clearcore_driver_node") {
         // parameters
         this->declare_parameter<std::string>("port", "/dev/ttyACM0");
-        this->declare_parameter<int>("baudrate", 115200);
+        this->declare_parameter<int>("baudrate", 2000000);
         this->get_parameter("port", port_);
         this->get_parameter("baudrate", baudrate_);
 
@@ -39,6 +39,28 @@ public:
         // publisher for feedback
         feedback_pub_ = this->create_publisher<std_msgs::msg::String>("clearcore/feedback", 10);
 
+        chatter_pub_ = this->create_publisher<std_msgs::msg::String>("clearcore/chatter", 10);
+
+        disable_ser_ = this->create_service<std_srvs::srv::Trigger>(
+            "clearcore_driver_node/disable_motors",
+            [this](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                   std::shared_ptr<std_srvs::srv::Trigger::Response> res) {
+                (void)req;
+                this->disableMotors();
+                res->success = true;
+                res->message = "Motors disabled";
+            });
+
+        enable_ser_ = this->create_service<std_srvs::srv::Trigger>(
+            "clearcore_driver_node/enable_motors",
+            [this](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                   std::shared_ptr<std_srvs::srv::Trigger::Response> res) {
+                (void)req;
+                this->enableMotors();
+                res->success = true;
+                res->message = "Motors enabled";
+            });
+
         // timer to poll serial for feedback
         timer_ = this->create_wall_timer(50ms, std::bind(&ClearcoreDriverNode::serialRead, this));
 
@@ -46,6 +68,7 @@ public:
     }
     
     ~ClearcoreDriverNode() {
+        // Close serial connection
         if (serial_.isOpen()) {
             serial_.close();
             RCLCPP_INFO(get_logger(), "Serial connection closed");
@@ -54,30 +77,23 @@ public:
 
 private:
     void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg) {
-        // simple diff‑drive mapping
-        double v =  msg->linear.x;
-        double w =  msg->angular.z;
-        double wheel_circumference = M_PI * wheel_diameter_;
-        double rpm_left  = ((v - (w * track_width_ / 2.0)) * gear_ratio_ * 60 )/ wheel_circumference;
-        double rpm_right = ((v + (w * track_width_ / 2.0)) * gear_ratio_ * 60 )/ wheel_circumference;
-        int vel_left = std::lround(rpm_left);
-        int vel_right = std::lround(rpm_right);
+    // Package linear and angular velocities into a command string (scaled by 1000)
+        float v = msg->linear.x;
+        float w = msg->angular.z;
+        int i_v = std::lround(v * 1000);
+        int i_w = std::lround(w * 1000);
 
-        std::string cmd0 = "v0 " + std::to_string(vel_left) + "\r\n";
-        std::string cmd1 = "v1 " + std::to_string(vel_left) + "\r\n";
-        std::string cmd2 = "v2 " + std::to_string(vel_right) + "\r\n";
-        std::string cmd3 = "v3 " + std::to_string(vel_right) + "\r\n";
-
-        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd0.c_str());
-        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd1.c_str());
-        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd2.c_str());
-        RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd3.c_str());
-
-        serial_.write(cmd0);
-        serial_.write(cmd1);
-        serial_.write(cmd2);
-        serial_.write(cmd3);
-    }
+        char cmd[64];
+        int len = std::snprintf(cmd, sizeof(cmd), "v %d %d\r\n", i_v, i_w);
+        if (len > 0) {
+            RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd);
+            serial_.write(std::string(cmd, len));
+            auto chatter_msg = std_msgs::msg::String();
+            chatter_msg.data = cmd;
+            chatter_pub_->publish(chatter_msg);
+            RCLCPP_DEBUG(get_logger(), "Published cmd to chatter: %s", cmd);
+        }
+}
 
     void serialRead() {
         if (!serial_.isOpen()) return;
@@ -97,12 +113,47 @@ private:
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr feedback_pub_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr chatter_pub_;
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_ser_;
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr enable_ser_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     // robot-specific constants (tune these)
     const double track_width_     = 0.585795;    // meters between left/right wheels
     const double wheel_diameter_  = 0.230;  // in meters
     const double gear_ratio_      = 10.0;
+
+    void disableMotors(u_int16_t motor = 255) {
+        // If a specific motor [0-3] is provided, only disable that one;
+        // Otherwise, disable all motors.
+        if (motor < 4) {
+            std::string cmd = "d" + std::to_string(motor) + "\r\n";
+            RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd.c_str());
+            serial_.write(cmd);
+        } else {
+            for (u_int16_t i = 0; i < 4; i++) {
+                std::string cmd = "d" + std::to_string(i) + "\r\n";
+                RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd.c_str());
+                serial_.write(cmd);
+            }
+        }
+    }
+
+    void enableMotors(u_int16_t motor = 255) {
+        // If a specific motor [0-3] is provided, only enable that one;
+        // Otherwise, enable all motors.
+        if (motor < 4) {
+            std::string cmd = "e" + std::to_string(motor) + "\r\n";
+            RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd.c_str());
+            serial_.write(cmd);
+        } else {
+            for (u_int16_t i = 0; i < 4; i++) {
+                std::string cmd = "e" + std::to_string(i) + "\r\n";
+                RCLCPP_DEBUG(get_logger(), "Sending cmd: %s", cmd.c_str());
+                serial_.write(cmd);
+            }
+        }
+    }
 };
 
 int main(int argc, char * argv[]) {
