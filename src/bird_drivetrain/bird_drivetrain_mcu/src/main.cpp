@@ -183,6 +183,7 @@
  */
 
  #include "ClearCore.h"
+ #include "ledc.h"
 
  // Specify which output pin to write digital PWM to.
  // PWM-capable pins: IO-0 through IO-5.
