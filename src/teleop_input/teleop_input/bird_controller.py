@@ -17,6 +17,7 @@ class JoyToCmdVel:
 
         self.cmdvel_pub = self.node.create_publisher(Twist, 'cmd_vel', 10)
         self.zeropt_pub = self.node.create_publisher(Bool, 'zeropt', 10)
+        self.cal_pub = self.node.create_publisher(Bool, 'arm_cal', 10)
 
 
     # Convert joy message into twist message
@@ -40,6 +41,11 @@ class JoyToCmdVel:
             self.zeropt_pub.publish(toggle_msg)
 
         self.prev_button1 = msg.buttons[1]
+
+        cal_msg = Bool()
+        cal_msg.data = bool(msg.buttons[2])
+        self.cal_pub.publish(cal_msg)
+
         self.cmdvel_pub.publish(twist_msg)
 
 def main(args=None):

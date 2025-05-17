@@ -34,18 +34,28 @@ public:
              return;
          }
 
-        zpt_sub_ = this->create_subscription<std_msgs::msg::Bool>("driver_enable", 10, std::bind(&LinacDriverNode::bool_callback, this, std::placeholders::_1));
+        cal_sub_ = this->create_subscription<std_msgs::msg::Bool>("calibrate", 10, std::bind(&LinacDriverNode::cal_callback, this, std::placeholders::_1));
         bucket_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("bucket_cmd", 10, std::bind(&LinacDriverNode::bucket_callback, this, std::placeholders::_1));
 
 
     }
 
-private:
-    void bool_callback(const std_msgs::msg::Bool::SharedPtr msg) {
-        RCLCPP_INFO(this->get_logger(), "Received driver_enable: %s", msg->data ? "true" : "false");
-        // Add functionality based on the received message
+    ~LinacDriverNode() {
+        // Close serial connection
+
+        try {
+            serial_.write("STATE:IDLE\n");
+        } catch (const std::exception &e) {
+            RCLCPP_ERROR(get_logger(), "Failed to send shutdown command: %s", e.what());
+        }
+
+        if (serial_.isOpen()) {
+            serial_.close();
+            RCLCPP_INFO(get_logger(), "Serial connection closed");
+        }
     }
 
+private:
     void bucket_callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
         static int prev_state = -1;
         int current_state = (msg->linear.z > 0.0) ? 0 :
@@ -55,15 +65,37 @@ private:
 
         if (current_state != prev_state) {
             const char* state_msgs[] = {
-                "Linear Z Positive",
-                "Linear Z Negative",
-                "Angular Y Positive",
-                "Angular Y Negative"
+            "Linear Z Positive",
+            "Linear Z Negative",
+            "Angular Y Positive",
+            "Angular Y Negative"
+            };
+            const char* pos_msgs[] = {
+            "POS:0,450",
+            "POS:0,0",
+            "POS:3600,2500",
+            "POS:200,200"
             };
             if (current_state < 4) {
-                RCLCPP_INFO(get_logger(), "State changed: %s", state_msgs[current_state]);
+            RCLCPP_INFO(get_logger(), "State changed: %s", state_msgs[current_state]);
+            try {
+                serial_.write(std::string(pos_msgs[current_state]) + "\n");
+            } catch (const std::exception &e) {
+                RCLCPP_ERROR(get_logger(), "Failed to send serial message: %s", e.what());
+            }
             }
             prev_state = current_state;
+        }
+    }
+
+    void cal_callback(const std_msgs::msg::Bool::SharedPtr msg) {
+        try {
+            serial_.write("STATE:IDLE\n");
+            serial_.write("STATE:ACTIVE\n");
+            serial_.write("CAL:ARM\n");
+            RCLCPP_INFO(get_logger(), "Calibration commands sent over serial.");
+        } catch (const std::exception &e) {
+            RCLCPP_ERROR(get_logger(), "Failed to send calibration commands: %s", e.what());
         }
     }
 
@@ -71,7 +103,7 @@ private:
     std::string port_;
     int baudrate_;
 
-    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr zpt_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr cal_sub_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr bucket_sub_;
 };
 

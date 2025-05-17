@@ -39,6 +39,8 @@ public:
         // subscriber to zero point
         zeropt_sub_ = this->create_subscription<std_msgs::msg::Bool>("zeropt", 10, std::bind(&ClearcoreDriverNode::zeroptCallback, this, std::placeholders::_1));
 
+        cal_sub_ = this->create_subscription<std_msgs::msg::Bool>("arm_cal", 10, std::bind(&ClearcoreDriverNode::zeroptCallback, this, std::placeholders::_1));
+
         // publisher for feedback
         feedback_pub_ = this->create_publisher<std_msgs::msg::String>("clearcore/feedback", 10);
 
@@ -125,6 +127,7 @@ private:
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr zeropt_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr cal_sub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr feedback_pub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr chatter_pub_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_ser_;
