@@ -89,6 +89,8 @@ private:
     }
 
     void cal_callback(const std_msgs::msg::Bool::SharedPtr msg) {
+        // Only execute if the button has been pressed (i.e., msg->data is true)
+        if (!msg->data) return;
         try {
             serial_.write("STATE:IDLE\n");
             serial_.write("STATE:ACTIVE\n");
