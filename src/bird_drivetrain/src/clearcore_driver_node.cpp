@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <serial/serial.h>
 #include <chrono>
@@ -35,6 +36,8 @@ public:
 
         // subscriber to cmd_vel
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&ClearcoreDriverNode::cmdVelCallback, this, std::placeholders::_1));
+        // subscriber to zero point
+        zeropt_sub_ = this->create_subscription<std_msgs::msg::Bool>("zeropt", 10, std::bind(&ClearcoreDriverNode::zeroptCallback, this, std::placeholders::_1));
 
         // publisher for feedback
         feedback_pub_ = this->create_publisher<std_msgs::msg::String>("clearcore/feedback", 10);
@@ -93,7 +96,16 @@ private:
             chatter_pub_->publish(chatter_msg);
             RCLCPP_DEBUG(get_logger(), "Published cmd to chatter: %s", cmd);
         }
-}
+    }
+
+    void zeroptCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+        std::string cmd = msg->data ? "z t\r\n" : "z 0\r\n";
+        RCLCPP_DEBUG(get_logger(), "Sending zeropt cmd: %s", cmd.c_str());
+        serial_.write(cmd);
+        auto chatter_msg = std_msgs::msg::String();
+        chatter_msg.data = cmd;
+        chatter_pub_->publish(chatter_msg);
+    }
 
     void serialRead() {
         if (!serial_.isOpen()) return;
@@ -112,6 +124,7 @@ private:
     int baudrate_;
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr zeropt_sub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr feedback_pub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr chatter_pub_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_ser_;
