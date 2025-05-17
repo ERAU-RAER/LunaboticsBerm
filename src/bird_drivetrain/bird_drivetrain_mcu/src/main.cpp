@@ -206,6 +206,22 @@ int main() {
         }
       }
     }
+
+        for (int i = 0; i < 4; i++) {
+        if (!motors[i]->StatusReg().bit.Enabled) {
+            SerialPort.Send("Unexpected disable on motor ");
+            SerialPort.Send(i);
+            SerialPort.SendLine(" detected. Resetting...");
+            // Reset the motor by disabling then re-enabling.
+            motors[i]->EnableRequest(false);
+            Delay_ms(100);
+            motors[i]->EnableRequest(true);
+            SerialPort.Send("Motor ");
+            SerialPort.Send(i);
+            SerialPort.SendLine(" re-enabled.");
+        }
+    }
+
     if (!SerialPort) {
       safeShutdown();
     }
