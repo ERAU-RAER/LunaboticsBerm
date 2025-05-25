@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(bird_drivetrain)
+project(bird_excavation)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -12,14 +12,17 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(serial REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
 
 include_directories(include)
 
-add_executable(clearcore_driver_node src/clearcore_driver_node.cpp)
-ament_target_dependencies(clearcore_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
+add_executable(linac_driver_node src/linac_driver_node.cpp)
+ament_target_dependencies(linac_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
 
 install(TARGETS
-  clearcore_driver_node
+  linac_driver_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
