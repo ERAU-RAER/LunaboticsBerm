@@ -17,6 +17,13 @@ include_directories(include)
 
 add_executable(clearcore_driver_node src/clearcore_driver_node.cpp)
 ament_target_dependencies(clearcore_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
+add_executable(linac_driver_node src/linac_driver_node.cpp)
+ament_target_dependencies(linac_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
+
+install(TARGETS
+  linac_driver_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 install(TARGETS
   clearcore_driver_node
