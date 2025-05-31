@@ -5,6 +5,6 @@
         <param name="coalesce_interval" value="0.1"/>
     </node>
 
-    <node pkg="teleop_input" exec="bird_controller" name="bird_controller"/>
+    <node pkg="bird_teleop" exec="bird_joy2cmd_node"/>
 </launch>
 
