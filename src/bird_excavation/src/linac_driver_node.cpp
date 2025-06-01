@@ -14,7 +14,7 @@ public:
     LinacDriverNode() : Node("linac_driver_node") {
 
          // parameters
-         this->declare_parameter<std::string>("port", "/dev/ttyACM0");
+         this->declare_parameter<std::string>("port", "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24230313831351E0C192-if00");
          this->declare_parameter<int>("baudrate", 115200);
          this->get_parameter("port", port_);
          this->get_parameter("baudrate", baudrate_);
