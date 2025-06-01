@@ -1,7 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
 #include <geometry_msgs/msg/twist.hpp>
-#include <std_msgs/msg/string.hpp>
-#include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include "bird_interfaces/srv/bucket_pos.hpp"
 #include <serial/serial.h>
