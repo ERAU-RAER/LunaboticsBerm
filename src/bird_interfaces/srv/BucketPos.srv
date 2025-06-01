@@ -1,0 +1,4 @@
+int8 position
+---
+bool success
+string message

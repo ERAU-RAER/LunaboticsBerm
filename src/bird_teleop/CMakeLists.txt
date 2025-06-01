@@ -14,7 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-
+find_package(bird_interfaces REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -24,14 +24,7 @@ include_directories(include)
 
 # Create Cpp executable
 add_executable(bird_joy2cmd_node src/bird_joy2cmd_node.cpp)
-ament_target_dependencies(
-  bird_joy2cmd_node
-  rclcpp
-  sensor_msgs
-  geometry_msgs
-  std_msgs
-  std_srvs
-)
+ament_target_dependencies(bird_joy2cmd_node rclcpp sensor_msgs geometry_msgs std_msgs std_srvs bird_interfaces)
 
 # Install Cpp executables
 install(TARGETS

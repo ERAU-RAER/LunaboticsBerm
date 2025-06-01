@@ -12,6 +12,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(serial REQUIRED)
+find_package(bird_interfaces REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -19,7 +20,7 @@ find_package(serial REQUIRED)
 include_directories(include)
 
 add_executable(linac_driver_node src/linac_driver_node.cpp)
-ament_target_dependencies(linac_driver_node rclcpp geometry_msgs std_msgs std_srvs serial)
+ament_target_dependencies(linac_driver_node rclcpp geometry_msgs std_msgs std_srvs serial bird_interfaces)
 
 install(TARGETS
   linac_driver_node
