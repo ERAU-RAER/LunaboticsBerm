@@ -5,14 +5,13 @@
 enum state { IDLE, ACTIVE };
 enum state currentState;
 
-enum command { CMD_STATE, CMD_POS, CMD_VIB, CMD_CAL, CMD_UNKNOWN = -1 };
+enum command { CMD_STATE, CMD_POS, CMD_VIB, CMD_CAL, CMD_STEP, CMD_UNKNOWN = -1 };
 
 // Timing
 unsigned long lastHeartbeat = 0;
 const unsigned long HEARTBEAT_INTERVAL_MS = 1000;
 
 // Status Code
-
 enum StatusCode {
   STATUS_OK = 0,
   STATUS_ERR_POS = 1,
@@ -60,7 +59,6 @@ void hall01B_ISR();
 void hall02A_ISR();
 void hall02B_ISR();
 void updateLinAcPos(uint8_t linAcID, char channel);
-
 
 void setup() {
   Serial.begin(115200);
@@ -136,8 +134,25 @@ void loop() {
         }
         break;
 
+      case CMD_STEP:
+        if (currentState == ACTIVE) {
+          int c1 = args.indexOf(',');
+          int c2 = args.indexOf(',', c1 + 1);
+          if (c1 != -1 && c2 != -1) {
+            linAcTargetPos[0] += args.substring(0, c1).toInt();
+            linAcTargetPos[1] += args.substring(c1 + 1, c2).toInt();
+            linAcTargetPos[2] += args.substring(c2 + 1).toInt();
+            statusCode = STATUS_OK;
+          } else {
+            statusCode = STATUS_ERR_POS;
+          }
+        } else {
+          statusCode = STATUS_ERR_STATE;
+        }
+        break;
+
       case CMD_CAL:
-        if (currentState == ACTIVE) currentState = IDLE;  // Fix typo
+        if (currentState == ACTIVE) currentState = IDLE;
         if (args == "ARM") {
           statusCode = STATUS_OK;
         } else if (args == "LDCL") {
@@ -216,6 +231,7 @@ command hashCommand(String cmd) {
   if (cmd == "POS") return CMD_POS;
   if (cmd == "VIB") return CMD_VIB;
   if (cmd == "CAL") return CMD_CAL;
+  if (cmd == "STEP") return CMD_STEP;
   return CMD_UNKNOWN;
 }
 
