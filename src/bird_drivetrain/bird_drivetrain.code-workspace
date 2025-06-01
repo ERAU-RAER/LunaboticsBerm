@@ -1,7 +1,8 @@
 {
 	"folders": [
 		{
-			"path": "../../../../../../../../../home/jake_161/Documents/PARA/1_projects/Lunabotics/LunaboticsBerm"
+			"name": "LunaboticsBerm",
+			"path": "../.."
 		},
 		{
 			"name": "bird_drivetrain_mcu",

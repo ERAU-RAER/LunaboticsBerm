@@ -12,6 +12,21 @@ find_package(rosidl_default_generators REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+# set(msg_files
+#   "msg/AddressBook.msg"
+# )
+
+set(srv_files
+  "srv/ChangeState.srv"
+  "srv/BucketPos.srv"
+   # etc
+  )
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  # ${msg_files}
+  ${srv_files}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -24,18 +39,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# set(msg_files
-#   "msg/AddressBook.msg"
-# )
-
-set(srv_files
-  "srv/ChangeState.srv"
-   # etc
-  )
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-  ${srv_files}
-)
 
 ament_package()
