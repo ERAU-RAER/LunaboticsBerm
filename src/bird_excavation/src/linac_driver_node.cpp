@@ -106,10 +106,7 @@ private:
         }
     }
 
-    void bucket_pos_callback(
-    const std::shared_ptr<bird_interfaces::srv::BucketPos::Request> request,
-    std::shared_ptr<bird_interfaces::srv::BucketPos::Response> response)
-{
+    void bucket_pos_callback(const std::shared_ptr<bird_interfaces::srv::BucketPos::Request> request,std::shared_ptr<bird_interfaces::srv::BucketPos::Response> response){
     static const char* pos_cmds[] = {
         "POS:0,450",      // Excavation
         "POS:3600,2600",  // Deposit
@@ -121,7 +118,6 @@ private:
     int idx = request->position;
     if (idx < 0 || idx > 3) {
         response->success = false;
-        response->message = "Invalid position index";
         RCLCPP_WARN(get_logger(), "Invalid bucket position index: %d", idx);
         return;
     }
@@ -129,11 +125,9 @@ private:
     try {
         serial_.write(std::string(pos_cmds[idx]) + "\n");
         response->success = true;
-        response->message = std::string("Sent: ") + pos_cmds[idx];
         RCLCPP_INFO(get_logger(), "Sent bucket position: %s", pos_cmds[idx]);
     } catch (const std::exception &e) {
         response->success = false;
-        response->message = e.what();
         RCLCPP_ERROR(get_logger(), "Failed to send bucket position: %s", e.what());
     }
 }
