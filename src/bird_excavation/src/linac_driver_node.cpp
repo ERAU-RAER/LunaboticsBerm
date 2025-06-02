@@ -1,7 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
 #include <geometry_msgs/msg/twist.hpp>
-#include <std_msgs/msg/string.hpp>
-#include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include "bird_interfaces/srv/bucket_pos.hpp"
 #include <serial/serial.h>
@@ -15,8 +13,8 @@ class LinacDriverNode : public rclcpp::Node {
 public:
     LinacDriverNode() : Node("linac_driver_node") {
 
-         // parametersd
-         this->declare_parameter<std::string>("port", "/dev/ttyACM0");
+         // parameters
+         this->declare_parameter<std::string>("port", "/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_24230313831351E0C192-if00");
          this->declare_parameter<int>("baudrate", 115200);
          this->get_parameter("port", port_);
          this->get_parameter("baudrate", baudrate_);
@@ -35,16 +33,18 @@ public:
              return;
          }
 
-        cal_srv_ = this->create_service<std_srvs::srv::Trigger>("linac_driver_node/calibrate",std::bind(&LinacDriverNode::cal_service_callback, this, std::placeholders::_1, std::placeholders::_2));
-        buck_pos_srv_ = this->create_service<bird_interfaces::srv::BucketPos>("linac_driver_node/bucket_pos",std::bind(&LinacDriverNode::bucket_pos_callback, this, std::placeholders::_1, std::placeholders::_2));
-        bucket_sub_ = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&LinacDriverNode::bucket_callback, this, std::placeholders::_1));
-
-
+        cal_srv_ = this->create_service<std_srvs::srv::Trigger>(
+            "linac_driver_node/calibrate",
+            std::bind(&LinacDriverNode::cal_service_callback, this, std::placeholders::_1, std::placeholders::_2));
+        buck_pos_srv_ = this->create_service<bird_interfaces::srv::BucketPos>(
+            "linac_driver_node/bucket_pos",
+            std::bind(&LinacDriverNode::bucket_pos_callback, this, std::placeholders::_1, std::placeholders::_2));
+        bucket_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+            "cmd_vel", 10, std::bind(&LinacDriverNode::bucket_callback, this, std::placeholders::_1));
     }
 
     ~LinacDriverNode() {
         // Close serial connection
-
         try {
             serial_.write("STATE:IDLE\n");
         } catch (const std::exception &e) {
@@ -58,39 +58,29 @@ public:
     }
 
 private:
+    // Incremental positioning via joystick
     void bucket_callback(const geometry_msgs::msg::Twist::SharedPtr msg) {
-        static int prev_state = -1;
-        int current_state = (msg->linear.z > 0.0) ? 0 :
-                            (msg->linear.z < 0.0) ? 1 :
-                            (msg->angular.y > 0.0) ? 2 :
-                            (msg->angular.y < 0.0) ? 3 : 4;
+        // Scale velocities to encoder ticks per message
+        // Adjust these scaling factors as needed for your hardware
+        int dz = static_cast<int>(msg->linear.z * 100);      // 100 ticks per m/s
+        int dyaw = static_cast<int>(msg->angular.y * 50);    // 50 ticks per rad/s
 
-        if (current_state != prev_state) {
-            const char* state_msgs[] = {
-            "Linear Z Positive",
-            "Linear Z Negative",
-            "Angular Y Positive",
-            "Angular Y Negative"
-            };
-            const char* pos_msgs[] = {
-            "POS:0,450",
-            "POS:0,0",
-            "POS:3600,2500",
-            "POS:200,200"
-            };
-            if (current_state < 4) {
-            RCLCPP_INFO(get_logger(), "State changed: %s", state_msgs[current_state]);
+        // Only send if nonzero
+        if (dz != 0 || dyaw != 0) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "STEP:%d,%d,0\n", dz, dyaw);
             try {
-                serial_.write(std::string(pos_msgs[current_state]) + "\n");
+                serial_.write(buf);
             } catch (const std::exception &e) {
-                RCLCPP_ERROR(get_logger(), "Failed to send serial message: %s", e.what());
+                RCLCPP_ERROR(get_logger(), "Failed to send STEP command: %s", e.what());
             }
-            }
-            prev_state = current_state;
         }
     }
 
-    void cal_service_callback(const std::shared_ptr<std_srvs::srv::Trigger::Request> request,std::shared_ptr<std_srvs::srv::Trigger::Response> response){
+    // Calibration service
+    void cal_service_callback(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
         (void)request; // unused
         try {
             serial_.write("STATE:IDLE\n");
@@ -106,31 +96,33 @@ private:
         }
     }
 
-    void bucket_pos_callback(const std::shared_ptr<bird_interfaces::srv::BucketPos::Request> request,std::shared_ptr<bird_interfaces::srv::BucketPos::Response> response){
-    static const char* pos_cmds[] = {
-        "POS:0,450",      // Excavation
-        "POS:3600,2600",  // Deposit
-        "POS:400,0",       // Low Drive
-        "POS:1200,0"     // High Drive
-        
-    };
+    // Fixed position service
+    void bucket_pos_callback(
+        const std::shared_ptr<bird_interfaces::srv::BucketPos::Request> request,
+        std::shared_ptr<bird_interfaces::srv::BucketPos::Response> response) {
+        static const char* pos_cmds[] = {
+            "POS:0,450,0",      // Excavation
+            "POS:3600,2600,0",  // Deposit
+            "POS:400,0,0",      // Low Drive
+            "POS:1200,0,0"      // High Drive
+        };
 
-    int idx = request->position;
-    if (idx < 0 || idx > 3) {
-        response->success = false;
-        RCLCPP_WARN(get_logger(), "Invalid bucket position index: %d", idx);
-        return;
-    }
+        int idx = request->position;
+        if (idx < 0 || idx > 3) {
+            response->success = false;
+            RCLCPP_WARN(get_logger(), "Invalid bucket position index: %d", idx);
+            return;
+        }
 
-    try {
-        serial_.write(std::string(pos_cmds[idx]) + "\n");
-        response->success = true;
-        RCLCPP_INFO(get_logger(), "Sent bucket position: %s", pos_cmds[idx]);
-    } catch (const std::exception &e) {
-        response->success = false;
-        RCLCPP_ERROR(get_logger(), "Failed to send bucket position: %s", e.what());
+        try {
+            serial_.write(std::string(pos_cmds[idx]) + "\n");
+            response->success = true;
+            RCLCPP_INFO(get_logger(), "Sent bucket position: %s", pos_cmds[idx]);
+        } catch (const std::exception &e) {
+            response->success = false;
+            RCLCPP_ERROR(get_logger(), "Failed to send bucket position: %s", e.what());
+        }
     }
-}
 
     serial::Serial serial_;
     std::string port_;

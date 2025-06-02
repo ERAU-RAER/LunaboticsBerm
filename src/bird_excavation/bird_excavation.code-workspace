@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "bird_excavation_mcu",
+			"path": "bird_excavation_mcu"
+		}
+	],
+	"settings": {
+		"python.autoComplete.extraPaths": [
+			"/ros2_ws/install/livox_ros_driver2/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_teleop/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_state_machine/lib/python3.10/site-packages",
+			"/ros2_ws/install/bird_navigation/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_interfaces/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_description/lib/python3.10/site-packages",
+			"/ros2_ws/install/arduino_serial_package/lib/python3.10/site-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		],
+		"python.analysis.extraPaths": [
+			"/ros2_ws/install/livox_ros_driver2/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_teleop/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_state_machine/lib/python3.10/site-packages",
+			"/ros2_ws/install/bird_navigation/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_interfaces/local/lib/python3.10/dist-packages",
+			"/ros2_ws/install/bird_description/lib/python3.10/site-packages",
+			"/ros2_ws/install/arduino_serial_package/lib/python3.10/site-packages",
+			"/opt/ros/humble/lib/python3.10/site-packages",
+			"/opt/ros/humble/local/lib/python3.10/dist-packages"
+		]
+	}
+}

@@ -1,6 +1,0 @@
-sudo ip addr add 192.168.1.50/24 dev eth0
-ros2 run bird_drivetrain clearcore_driver_node
-POS:0,450 (Excavation)
-POS:3600,2600 (Deposit)
-POS: 1200, 0 (High Drive)
-POS: 400,0 (Low Drive)

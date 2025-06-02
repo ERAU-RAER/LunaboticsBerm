@@ -15,7 +15,7 @@ class ClearcoreDriverNode : public rclcpp::Node
 public:
     ClearcoreDriverNode() : Node("clearcore_driver_node") {
         // parameters
-        this->declare_parameter<std::string>("port", "/dev/ttyACM0");
+        this->declare_parameter<std::string>("port", "/dev/serial/by-id/usb-Teknic__Inc._Teknic_ClearCore_31B0D2CB534D394852202020FF044536-if00");
         this->declare_parameter<int>("baudrate", 2000000);
         this->get_parameter("port", port_);
         this->get_parameter("baudrate", baudrate_);
