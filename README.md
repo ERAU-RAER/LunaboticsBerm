@@ -42,4 +42,8 @@ BIRD is built on ROS2 (Humble) and Ubuntu 22.04 (Jammy Jellyfish). It is compris
 10. Custom State Machine and Fault Detection System
 
 ## 🔧 Setup Guide
-*WIP*
+1. cd LunaboticsBerm colcon build
+2. source install/local_setup.sh
+3. ros2 run bird_drivetrain clearcore_driver_node
+4. ros2 run teleop_twist_keyboard teleop_twist_keyboard
+5. ros2 service call /clearcore_driver_node/enable_motors std_srvs/srv/Trigger
