@@ -43,3 +43,16 @@ BIRD is built on ROS2 (Humble) and Ubuntu 22.04 (Jammy Jellyfish). It is compris
 
 ## 🔧 Setup Guide
 *WIP*
+
+### Building with the ROS/System Python
+Many ROS 2 tools assume the system interpreter at `/usr/bin/python3`. If Conda or another virtual environment is active when you call `colcon build`, those tools may fail with missing-module errors (e.g., `ModuleNotFoundError: No module named 'catkin_pkg'`).
+
+You have two options to force `colcon` to use the correct interpreter:
+1. **Temporary shell export**
+   ```bash
+   export COLCON_PYTHON_EXECUTABLE=/usr/bin/python3
+   source /opt/ros/humble/setup.bash
+   colcon build
+   ```
+2. **Use the helper script**  
+   Run `./scripts/colcon_build_system_python.sh`. The script sources ROS Humble, exports `COLCON_PYTHON_EXECUTABLE=/usr/bin/python3`, and forwards any extra arguments to `colcon build`.
